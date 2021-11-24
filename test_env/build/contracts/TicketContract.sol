@@ -1,4 +1,4 @@
-pragma solidity 0.6.6;
+pragma solidity 0.8.3;
 
 contract TicketInsurance{
 
@@ -8,15 +8,13 @@ contract TicketInsurance{
     // Mappings
 
     // Constructors
-    constructor() public {
-        contractOwner = msg.sender;
-    }
+    constructor() {contractOwner = msg.sender;}
 
     // Structs
 
     struct Ticket {
-        address owner;
-        uint ticket_id;
+        address payable owner;
+        bytes32 ticket_id;
         uint train_number;
         uint price;
         uint datetime_departure;
@@ -25,30 +23,86 @@ contract TicketInsurance{
         string station_arrival;
     }
 
-    mapping(address => mapping(uint => Ticket)) tickets_database;
+
+    mapping(address => mapping(bytes32 => Ticket)) tickets_database;
+    mapping(uint => Ticket[]) tickets_database_by_train_number;
+
+    // Events
+
+    event TicketEmission(bytes32 ticketId);
 
     // Functions
 
     function UploadTickets(uint _trainNumber, uint _price, uint _datetimeDeparture, 
                            uint _datetimeArrivalPredicted, string memory _stationDeparture, 
-                           string memory _stationArrival) public {
+                           string memory _stationArrival, uint _totalNumberTickets) public {
         require(msg.sender == contractOwner, "You're not Italo. You cannot upload any ticket.");
-        // uint _totalNumberTickets
-        //for (uint i=0; i<_totalNumberTickets; i++)
-
-        uint _id = 0; 
-        tickets_database[msg.sender][_id] = Ticket(msg.sender, _id, _trainNumber, _price, _datetimeDeparture, _datetimeArrivalPredicted,
-        _stationDeparture,  _stationArrival);
+        uint total_number = _totalNumberTickets;
+        address payable Italo = payable(msg.sender);
+        for (uint i=0; i<total_number; i++){
+            bytes32 _id = keccak256(abi.encodePacked(i, _trainNumber, _datetimeDeparture, _stationDeparture, _stationArrival)); 
+            tickets_database[Italo][_id] = Ticket(Italo, _id, _trainNumber, _price, _datetimeDeparture, _datetimeArrivalPredicted, _stationDeparture,  _stationArrival);
+            tickets_database_by_train_number[_trainNumber].push(Ticket(Italo, _id, _trainNumber, _price, _datetimeDeparture, _datetimeArrivalPredicted, _stationDeparture,  _stationArrival));
+            emit TicketEmission(_id);
+        }        
     }
 
-    function SeeYourTicket(uint _ticketId) public view returns (string memory) {
+    function SeeYourTicket(bytes32 _ticketId) public view returns (uint, uint, uint, string memory, uint, string memory) {
+        require(tickets_database[msg.sender][_ticketId].owner == msg.sender, "This ticket doesn't belong to you! Try to re-type the ticketId!");
         address owner = msg.sender;
-        uint ticket_id = _ticketId;
-        string memory myticket_station = tickets_database[owner][ticket_id].station_departure;
+        bytes32 ticket_id = _ticketId;
+        uint myticket_trainNumber = tickets_database[owner][ticket_id].train_number;
+        uint myticket_price = tickets_database[owner][ticket_id].price;
+        uint myticket_datetimeDeparture = tickets_database[owner][ticket_id].datetime_departure;
+        string memory myticket_stationDeparture = tickets_database[owner][ticket_id].station_departure;
+        uint myticket_datetimeArrivalPredicted = tickets_database[owner][ticket_id].datetime_arrival_predicted;
+        string memory myticket_stationArrival = tickets_database[owner][ticket_id].station_arrival;
         
-        return myticket_station;
+        return (myticket_trainNumber, myticket_price, myticket_datetimeDeparture, myticket_stationDeparture, myticket_datetimeArrivalPredicted, myticket_stationArrival);
     }
 
+    function BuyTicket(uint _trainNumber) public returns(bytes32){
+        uint counter = 0;
+        Ticket memory ticket_to_be_bought = tickets_database_by_train_number[_trainNumber][counter];
+        while ((ticket_to_be_bought.owner != contractOwner) && (counter < tickets_database_by_train_number[_trainNumber].length)) {
+            counter += 1;
+            ticket_to_be_bought = tickets_database_by_train_number[_trainNumber][counter];                    
+        }
+
+        // Insert a control for owner to exist
+
+        ticket_to_be_bought.owner = payable(msg.sender);
+        uint ticket_price = ticket_to_be_bought.price;
+        //(bool sent, bytes memory data) = contractOwner.call{value: ticket_price}("You have just paid Italo for your ticket!");
+        
+        // Require that the money has actually been sent to then change the owner of the ticket
+        //require(sent, "Failed to send Ether");
+
+        tickets_database[contractOwner][ticket_to_be_bought.ticket_id].owner = ticket_to_be_bought.owner;
+
+        emit TicketEmission(ticket_to_be_bought.ticket_id);
+    }
+
+    function Refunding(Ticket memory _ticket) public payable {
+        // Call returns a boolean value indicating success or failure.
+        // This is the current recommended method to use.
+        address payable ticket_owner = _ticket.owner;
+        uint ticket_price = _ticket.price;
+        (bool sent, bytes memory data) = ticket_owner.call{value: ticket_price}("You have been refunded for the delay");
+        require(sent, "Failed to send Ether");
+    }
+
+    function ReturnRefundTickets(uint _trainNumber) public{
+        uint counter_tickets = tickets_database_by_train_number[_trainNumber].length;
+        for (uint i=0; i<counter_tickets; i++){
+            Refunding(tickets_database_by_train_number[_trainNumber][i]);
+            //tickets_database_by_train_number[_trainNumber][i] = ;
+        }
+    }
+
+    //function CheckDelay(uint _trainNumber) public view returns (bool){
+    //
+    //} 
 }
 
 // Ticket Contract, in general:
