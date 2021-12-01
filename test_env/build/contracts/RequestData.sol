@@ -68,7 +68,8 @@ contract APIConsumer is ChainlinkClient {
     
     /**
      * Receive the response in the form of uint256
-     */ 
+     */
+
     function fulfill(bytes32 _requestId, uint256 _volume) public recordChainlinkFulfillment(_requestId)
     {
         volume = _volume;
@@ -76,3 +77,4 @@ contract APIConsumer is ChainlinkClient {
 
     // function withdrawLink() external {} - Implement a withdraw function to avoid locking your LINK in the contract
 }
+

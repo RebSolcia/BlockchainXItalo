@@ -20,8 +20,8 @@ contract TicketInsurance{
         uint price;
         uint datetime_departure;
         uint datetime_arrival_predicted;
-        string station_departure;
-        string station_arrival;
+        string station_departure; // encode stations by number 
+        string station_arrival; // encode stations by number 
     }
 
 
@@ -135,4 +135,8 @@ contract TicketInsurance{
 // 3. Add other stop stations
 
 
-// ACTUAL CODE:
+// INTRODUCE TIME:
+// Use your own Oracle that keeps calling the contract
+// We want to auto-refund. The off-chain Oracle has a loop (open the web3 connection) - while true - via web3 we check for some event 
+// (query for train time) make a call from the contract
+// Automatically refund: keep checking the train API and from outside I call everybody
