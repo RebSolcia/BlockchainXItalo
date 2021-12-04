@@ -21,6 +21,14 @@ tags_metadata = [
     {
         "name": "upload",
         "description": "Endpoints that perform the upload of tickets."
+    },
+    {
+        "name": "seeTicket",
+        "description": "Endpoints that perform the broadcasting of tickets."
+    },
+    {
+        "name": "buyTicket",
+        "description": "Endpoints that allows the purchase of tickets."
     }
 ]
 
@@ -150,9 +158,22 @@ async def upload_database(
     return return_json
 
 
-@app.get("/see_your_ticket/")
-async def see_your_ticket(owner: str,
-                          ticket_id: int):
+@app.get(
+    path="/see_your_ticket/",
+    tags=["seeTicket"],
+    summary="See Your Tickets",
+    description="Main method to query your tickets in the Italo database."
+)
+async def see_your_ticket(
+        owner: str = Query(
+            default=...,
+            description="Owner of the ticket that must be seen."
+        ),
+        ticket_id: int = Query(
+            default=...,
+            description="Id of the ticket that must be seen."
+        ),
+):
     # Access the database by querying it with both the owner and the ticket_id keys
     # It should return the info (check whether there is some Oracle that can actually return lists)
 
@@ -188,9 +209,22 @@ async def see_your_ticket(owner: str,
     return json_ticket
 
 
-@app.get("/buy_ticket/")
-async def buy_ticket(owner: str,
-                     ticket_id: int):
+@app.get(
+    path="/buy_ticket/",
+    tags=["buyTicket"],
+    summary="Buy Tickets",
+    description="Main method to buy tickets from the Italo database."
+)
+async def buy_ticket(
+        owner: str = Query(
+            default=...,
+            description="Owner of the ticket that must be seen."
+        ),
+        ticket_id: int = Query(
+            default=...,
+            description="Id of the ticket that must be seen."
+        ),
+):
     # Access the database and get the first available ticket and change the owner
 
     con = sqlite3.connect("Italo.db")
@@ -235,6 +269,7 @@ async def buy_ticket(owner: str,
 
 
 if __name__ == "__main__":
+    print("INFO: To read the documentation: http://localhost:400/docs")
     print("INFO: Run test at http://localhost:400/upload_tickets/?owner=0x14408Ee49aC5B4BCce27E8699fEaaBD15e222D12"
           "&train_number=7138&price=30&datetime_departure=40&datetime_arrival_predicted=50&station_departure=Venice"
           "&station_arrival=Florence&n_tickets=20")
