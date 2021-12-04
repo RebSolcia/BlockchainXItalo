@@ -26,7 +26,7 @@ tags_metadata = [
 
 app = FastAPI(
     title="BlockchainXItalo",
-    description="A webservice that interacts with Italo through use of Chainlink and Ethereum blockchain.",
+    description="A webservice that interacts with Italo through use of ChainLink and Ethereum blockchain.",
     version=VERSION,
     openapi_tags=tags_metadata,
 )
@@ -134,13 +134,13 @@ async def upload_database(
 
         data_dictionary.append(ticket_dictionary)
 
-    stmt = f"""INSERT INTO Italo 
+    query = f"""INSERT INTO Italo 
                 (owner, ticket_id, train_number, price, datetime_departure, datetime_arrival_predicted,
                 station_departure, station_arrival)
                 
                 VALUES(?, ?, ?, ?, ?, ?, ?, ?);
             """
-    cur.executemany(stmt, data)
+    cur.executemany(query, data)
 
     con.commit()
     con.close()
@@ -155,7 +155,37 @@ async def see_your_ticket(owner: str,
                           ticket_id: int):
     # Access the database by querying it with both the owner and the ticket_id keys
     # It should return the info (check whether there is some Oracle that can actually return lists)
-    return
+
+    con = sqlite3.connect("Italo.db")
+    cur = con.cursor()
+
+    literal = owner[2:]
+
+    query = f"""SELECT *
+               FROM Italo i
+               WHERE 1==1
+               AND i.ticket_id == {ticket_id}
+               AND i.owner == "0x{literal}"
+            """
+
+    cur.execute(query)
+
+    con.commit()
+    ticket = cur.fetchall()
+    con.close()
+
+    json_ticket = {
+        "owner": ticket[0][0],
+        "ticket_id": ticket[0][1],
+        "train_number": ticket[0][2],
+        "price": ticket[0][3],
+        "datetime_departure": ticket[0][4],
+        "datetime_arrival": ticket[0][5],
+        "station_departure": ticket[0][6],
+        "station_arrival": ticket[0][7],
+    }
+
+    return json_ticket
 
 
 @app.get("/buy_ticket/")
