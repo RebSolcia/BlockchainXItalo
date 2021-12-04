@@ -192,7 +192,46 @@ async def see_your_ticket(owner: str,
 async def buy_ticket(owner: str,
                      ticket_id: int):
     # Access the database and get the first available ticket and change the owner
-    return
+
+    con = sqlite3.connect("Italo.db")
+    cur = con.cursor()
+
+    literal = owner[2:]
+
+    query = f"""UPDATE Italo
+                SET owner = "0x{literal}"
+                WHERE 1==1
+                AND ticket_id == {ticket_id}
+            """
+
+    cur.execute(query)
+    con.commit()
+
+    query = f"""SELECT *
+                   FROM Italo i
+                   WHERE 1==1
+                   AND i.ticket_id == {ticket_id}
+                   AND i.owner == "0x{literal}"
+                """
+
+    cur.execute(query)
+    con.commit()
+
+    ticket = cur.fetchall()
+    con.close()
+
+    json_ticket = {
+        "owner": ticket[0][0],
+        "ticket_id": ticket[0][1],
+        "train_number": ticket[0][2],
+        "price": ticket[0][3],
+        "datetime_departure": ticket[0][4],
+        "datetime_arrival": ticket[0][5],
+        "station_departure": ticket[0][6],
+        "station_arrival": ticket[0][7],
+    }
+
+    return json_ticket
 
 
 if __name__ == "__main__":
