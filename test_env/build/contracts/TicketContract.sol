@@ -38,6 +38,7 @@ contract TicketInsurance{
                            uint _datetimeArrivalPredicted, string memory _stationDeparture, 
                            string memory _stationArrival, uint _totalNumberTickets) public {
         require(msg.sender == contractOwner, "You're not Italo. You cannot upload any ticket.");
+        // Call our API with Chainlink
         uint total_number = _totalNumberTickets;
         address payable Italo = payable(msg.sender);
         for (uint i=0; i<total_number; i++){
@@ -139,4 +140,4 @@ contract TicketInsurance{
 // Use your own Oracle that keeps calling the contract
 // We want to auto-refund. The off-chain Oracle has a loop (open the web3 connection) - while true - via web3 we check for some event 
 // (query for train time) make a call from the contract
-// Automatically refund: keep checking the train API and from outside I call everybody
+// Automatically refund: keep checking the train API and from outside I call everybody.
