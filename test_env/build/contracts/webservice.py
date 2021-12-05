@@ -77,6 +77,7 @@ async def validation_exception_handler(
     description="Main method to upload tickets for Italo."
 )
 async def upload_database(
+        request: Request,
         owner: str = Query(
             default=...,
             description="Owner of the ticket.",
@@ -216,6 +217,7 @@ async def see_your_ticket(
     description="Main method to buy tickets from the Italo database."
 )
 async def buy_ticket(
+        request: Request,
         owner: str = Query(
             default=...,
             description="Owner of the ticket that must be seen."
@@ -226,7 +228,7 @@ async def buy_ticket(
         ),
 ):
     # Access the database and get the first available ticket and change the owner
-
+    richiesta = request
     con = sqlite3.connect("Italo.db")
     cur = con.cursor()
 
@@ -258,7 +260,7 @@ async def buy_ticket(
         "owner": ticket[0][0],
         "ticket_id": ticket[0][1],
         "train_number": ticket[0][2],
-        "price": ticket[0][3],
+        "price": str(ticket[0][3]),
         "datetime_departure": ticket[0][4],
         "datetime_arrival": ticket[0][5],
         "station_departure": ticket[0][6],
