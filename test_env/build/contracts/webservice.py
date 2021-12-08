@@ -260,7 +260,7 @@ async def buy_ticket(
         "owner": ticket[0][0],
         "ticket_id": ticket[0][1],
         "train_number": ticket[0][2],
-        "price": str(ticket[0][3]),
+        "price": ticket[0][3],
         "datetime_departure": ticket[0][4],
         "datetime_arrival": ticket[0][5],
         "station_departure": ticket[0][6],
