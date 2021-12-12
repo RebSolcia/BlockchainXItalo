@@ -2,6 +2,8 @@ pragma solidity ^0.6.0;
 
 import "https://github.com/smartcontractkit/chainlink/blob/develop/contracts/src/v0.6/ChainlinkClient.sol";
 
+import "https://github.com/Arachnid/solidity-stringutils/blob/master/src/strings.sol";
+
 
 //contracts are like classes
 //this Chainlink example inherits from ChainlinkClient
@@ -82,11 +84,20 @@ contract ChainlinkExample is ChainlinkClient {
         return sendChainlinkRequestTo(Oracle, request, fee);
     
     }
+    // Client has to input everything (price, datetime ecc)
+    // Transaction
+        //Store ticket in the mapping [train_number]=>[datetime_of_arrival]=>ticket
+    // Ask refund (train_number, datetime_of_arrival)
+        // require (-0h <now - datetime_of_arrival< 2h, "Try again with another key")
+        // call oracle webscraping ==>bool
+            //if true iterare 
+    // function check delay 
+
 
     function fulfillBuyTicket(bytes32 _requestId, uint256 _price) public recordChainlinkFulfillment(_requestId) {
         currentPrice = _price;
         
-        Ticket memory ticket_to_be_bought = tickets_database_by_train_number[_trainNumber][counter];
+        Ticket memory ticket_to_be_bought = tickets_byTrain_byTime[_trainNumber][counter];
 
         // Insert a control for owner to exist
 
