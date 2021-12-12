@@ -82,6 +82,31 @@ contract ChainlinkExample is ChainlinkClient {
         stringaSplitted = split(_base, _value);
     }
 
+    // Bytes to string
+
+    function bytes32ToString(bytes32 _bytes32) public pure returns (string memory) {
+        uint8 i = 0;
+        while(i < 32 && _bytes32[i] != 0) {
+            i++;
+        }
+        bytes memory bytesArray = new bytes(i);
+        for (i = 0; i < 32 && _bytes32[i] != 0; i++) {
+            bytesArray[i] = _bytes32[i];
+        }
+        return string(bytesArray);
+    }
+    
+    function stringToBytes32(string memory source) public pure returns (bytes32 result) {
+        bytes memory tempEmptyStringTest = bytes(source);
+        if (tempEmptyStringTest.length == 0) {
+            return 0x0;
+        }
+
+        assembly { // solhint-disable-line no-inline-assembly
+            result := mload(add(source, 32))
+        }
+    }
+
     //define state variables stored on the block chain
     uint256 public currentPrice;
     address public owner;
@@ -89,6 +114,7 @@ contract ChainlinkExample is ChainlinkClient {
     bytes32 public jobId;
     uint256 public fee; 
     
+    mapping(bytes32 => uint) RequestToPrice;
     
     //constructor is run at the time of contract creating
     constructor() public {
@@ -118,6 +144,7 @@ contract ChainlinkExample is ChainlinkClient {
     function fulfill(bytes32 _requestId, uint256 _price) public recordChainlinkFulfillment(_requestId) 
     {
         currentPrice = _price;
+        RequestToPrice[_requestId] = _price;
     }
     
     modifier onlyOwner() {
