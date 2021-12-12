@@ -1,55 +1,107 @@
-pragma solidity ^0.6.0;
+pragma solidity ^0.5.0;
 
-import "https://github.com/smartcontractkit/chainlink/blob/develop/contracts/src/v0.6/ChainlinkClient.sol";
-
-import "https://github.com/Arachnid/solidity-stringutils/blob/master/src/strings.sol";
+import "https://github.com/willitscale/solidity-util/blob/master/lib/Strings.sol";
+import "https://github.com/smartcontractkit/chainlink/blob/develop/contracts/src/v0.5/ChainlinkClient.sol";
 
 
 //contracts are like classes
 //this Chainlink example inherits from ChainlinkClient
 
 contract ChainlinkExample is ChainlinkClient {
+
+    string[] public stringaSplitted;
+
+    function _indexOf(string memory _base, string memory _value, uint _offset)
+        internal
+        pure
+        returns (int) {
+        bytes memory _baseBytes = bytes(_base);
+        bytes memory _valueBytes = bytes(_value);
+
+        assert(_valueBytes.length == 1);
+
+        for (uint i = _offset; i < _baseBytes.length; i++) {
+            if (_baseBytes[i] == _valueBytes[0]) {
+                return int(i);
+            }
+        }
+
+        return -1;
+    }
+
+    function indexOf(string memory _base, string memory _value)
+        internal
+        pure
+        returns (int) {
+        return _indexOf(_base, _value, 0);
+    }
     
+    function split(string memory _base, string memory _value)
+        internal
+        pure
+        returns (string[] memory splitArr) {
+        bytes memory _baseBytes = bytes(_base);
+
+        uint _offset = 0;
+        uint _splitsCount = 1;
+        while (_offset < _baseBytes.length - 1) {
+            int _limit = _indexOf(_base, _value, _offset);
+            if (_limit == -1)
+                break;
+            else {
+                _splitsCount++;
+                _offset = uint(_limit) + 1;
+            }
+        }
+
+        splitArr = new string[](_splitsCount);
+
+        _offset = 0;
+        _splitsCount = 0;
+        while (_offset < _baseBytes.length - 1) {
+
+            int _limit = _indexOf(_base, _value, _offset);
+            if (_limit == - 1) {
+                _limit = int(_baseBytes.length);
+            }
+
+            string memory _tmp = new string(uint(_limit) - _offset);
+            bytes memory _tmpBytes = bytes(_tmp);
+
+            uint j = 0;
+            for (uint i = _offset; i < uint(_limit); i++) {
+                _tmpBytes[j++] = _baseBytes[i];
+            }
+            _offset = uint(_limit) + 1;
+            splitArr[_splitsCount++] = string(_tmpBytes);
+        }
+        return splitArr;
+    }
+
+    function MySplit(string memory _base, string memory _value) public {
+        stringaSplitted = split(_base, _value);
+    }
+
     //define state variables stored on the block chain
     uint256 public currentPrice;
     address public owner;
     address public Oracle;
     bytes32 public jobId;
     uint256 public fee; 
-    // Environmental variables
-    address public contractOwner;
-
-    // Structs
-    struct Ticket {
-        address payable owner;
-        bytes32 ticket_id;
-        uint train_number;
-        uint price;
-        uint datetime_departure;
-        uint datetime_arrival_predicted;
-        string station_departure; // encode stations by number 
-        string station_arrival; // encode stations by number 
-    }
-
-    // Mappings
-    mapping(uint => mapping(uint => Ticket[])) tickets_byTrain_byTime;
     
-    // Constructor is run at the time of contract creating
+    
+    //constructor is run at the time of contract creating
     constructor() public {
-        contractOwner = msg.sender;
         setPublicChainlinkToken();
         owner = msg.sender;
         Oracle = 0xc57B33452b4F7BB189bB5AfaE9cc4aBa1f7a4FD8;
         jobId = "d5270d1c311941d0b08bead21fea7747";
         fee = 0.1 * 10 ** 18; // 0.1 LINK
     }
-
-    // Events
-    event TicketEmission(bytes32 ticketId);
-
+    
     //function below creates a Chainlink API request to get a price
     //only the owner of the contract can call this function
-    function requestPrice() public returns (bytes32 requestId)
+    function requestPrice() public onlyOwner returns (bytes32 requestId)
     {
         //create a variable and store it temporarily in memory
         Chainlink.Request memory request = buildChainlinkRequest(jobId, address(this), this.fulfill.selector);
@@ -67,51 +119,10 @@ contract ChainlinkExample is ChainlinkClient {
     {
         currentPrice = _price;
     }
-
-
-    function BuyTicket(uint train_number, uint price, uint datetime_departure, uint datetime_arrival_predicted, string memory station_departure, string memory station_arrival) public returns(bytes32 requestId){
-        
-        //create a variable and store it temporarily in memory
-        Chainlink.Request memory request = buildChainlinkRequest(jobId, address(this), this.fulfillBuyTicket.selector);
-
-        //set the url to perform the GET request
-        request.add("get", "pathtorequestOfBuyingTickets");
-
-        //set the path to find the requred data in the api response
-        request.add("path", "datetime_format");
-
-        //send the request
-        return sendChainlinkRequestTo(Oracle, request, fee);
     
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
     }
-    // Client has to input everything (price, datetime ecc)
-    // Transaction
-        //Store ticket in the mapping [train_number]=>[datetime_of_arrival]=>ticket
-    // Ask refund (train_number, datetime_of_arrival)
-        // require (-0h <now - datetime_of_arrival< 2h, "Try again with another key")
-        // call oracle webscraping ==>bool
-            //if true iterare 
-    // function check delay 
 
-
-    function fulfillBuyTicket(bytes32 _requestId, uint256 _price) public recordChainlinkFulfillment(_requestId) {
-        currentPrice = _price;
-        
-        Ticket memory ticket_to_be_bought = tickets_byTrain_byTime[_trainNumber][counter];
-
-        // Insert a control for owner to exist
-
-        ticket_to_be_bought.owner = payable(msg.sender);
-        uint ticket_price = ticket_to_be_bought.price;
-        //(bool sent, bytes memory data) = contractOwner.call{value: ticket_price}("You have just paid Italo for your ticket!");
-
-        // Require that the money has actually been sent to then change the owner of the ticket
-        //require(sent, "Failed to send Ether");
-
-        tickets_database[contractOwner][ticket_to_be_bought.ticket_id].owner = ticket_to_be_bought.owner;
-
-        emit TicketEmission(ticket_to_be_bought.ticket_id);
-        
     }
-    
-}
