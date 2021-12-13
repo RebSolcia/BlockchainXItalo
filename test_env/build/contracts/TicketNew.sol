@@ -1,8 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "https://github.com/willitscale/solidity-util/blob/master/lib/Strings.sol";
 import "https://github.com/smartcontractkit/chainlink/blob/develop/contracts/src/v0.5/ChainlinkClient.sol";
-
 
 //contracts are like classes
 //this Chainlink example inherits from ChainlinkClient
@@ -138,7 +136,7 @@ contract ChainlinkExample is ChainlinkClient {
         setPublicChainlinkToken();
         owner = msg.sender;
         Oracle = 0xc57B33452b4F7BB189bB5AfaE9cc4aBa1f7a4FD8;
-        jobId = "d5270d1c311941d0b08bead21fea7747";
+        jobId = "7401f318127148a894c00c292e486ffd";
         fee = 0.1 * 10 ** 18; // 0.1 LINK
     }
 
@@ -210,12 +208,12 @@ contract ChainlinkExample is ChainlinkClient {
     function buyTicket(bytes32 _requestId) public payable {
 
         // Instantiate the actual price from string to uint to allow comparison with the msg.value
-        uint _actualPrice = StringToUint(RequestToPrice[_requestId][4]);
+        uint actual_price = StringToUint(RequestToPrice[_requestId][4]);
 
         // We should potentially add a way in which we could transform the price from euro to ETH (or whichever value)
 
         // Here i put index 4 but we need to change it as soon as we integrate the function
-        require(msg.value >= _actualPrice, "You have paid too little! Try again.");
+        require(msg.value >= actual_price, "You have paid too little! Try again.");
 
         // Instantiate all of the variables by using the RequestToPrice array
         address payable _owner = msg.sender;
