@@ -88,7 +88,7 @@ contract ChainlinkExample is ChainlinkClient {
         return string(bytesArray);
     }
     
-    function stringToBytes32(string memory source) private pure returns (bytes32 result) {
+    function stringToBytes32(string memory source) public pure returns (bytes32 result) {
         bytes memory tempEmptyStringTest = bytes(source);
         if (tempEmptyStringTest.length == 0) {
             return 0x0;
@@ -127,6 +127,9 @@ contract ChainlinkExample is ChainlinkClient {
     address public Oracle;
     bytes32 public jobId;
     uint256 public fee; 
+    bytes32 public bytesdirisposta;
+    string public response_string;
+    uint public counter = 0;
     
     // This mapping is made public so that for now we can debug and see whether tickets are added in the right way
     mapping(bytes32 => string[]) public RequestToPrice;
@@ -150,34 +153,36 @@ contract ChainlinkExample is ChainlinkClient {
     
     // The function below is meant to request and store the information from Italo's website
     function requestInfo(string memory _stationDeparture, string memory _stationArrival,
-                         uint _datetimeDeparture) public returns (bytes32 requestId) {
+                         string memory _datetimeDeparture) public returns (bytes32 requestId) {
 
         //create a variable and store it temporarily in memory
         Chainlink.Request memory request = buildChainlinkRequest(jobId, address(this), this.fulfill.selector);
 
-        string memory ngrok_address = "https://9e37-93-66-104-18.ngrok.io";
-
         //set the url to perform the GET request so that the request is built adaptively
-        string memory query = string(abi.encodePacked(ngrok_address, "/request_info/?", 
+        string memory query = string(abi.encodePacked("https://3032-2001-b07-a3c-400a-c9b0-c2bf-4a44-ad02.ngrok.io", 
+                                                      "/request_info/?", 
                                                       "departure_station=", _stationDeparture, 
                                                       "&arrival_station=", _stationArrival, 
-                                                      "&datetime_departure=", _datetimeDeparture));
+                                                      "&departure_hour=", _datetimeDeparture));
         request.add("get", query);
 
         //set the path to find the requred data in the api response
         request.add("path", "response");
-
-        //multiply the results by 100 to remove decimals
-        request.addInt("times", 100);
 
         //send the request
         return sendChainlinkRequestTo(Oracle, request, fee);
     }
     
     function fulfill(bytes32 _requestId, bytes32 _response) public recordChainlinkFulfillment(_requestId) {
+        // counter += 1;
+        // Sanity check for the response bytes
+        // "Mi_1639495500_Ro_9983_89"
+        bytesdirisposta = _response;
+
+        //string memory key = bytes32ToString(_requestId);
 
         // Store the response_string inside a variable, after having transformed the bytes32 response into a string
-        string memory response_string = bytes32ToString(_response);
+        response_string = bytes32ToString(_response);
 
         // Split the string response_string based on underscores, so that you can index the response inside 
         // the RequestToPrice mapping
@@ -189,9 +194,39 @@ contract ChainlinkExample is ChainlinkClient {
         RequestToPrice[_requestId] = response_list;
 
         // Emit a message telling the user that the transaction went smoothly and the ticket needs to be paid
-        emit TicketInfo(string(abi.encodePacked("Your ticket has been successfully stored inside our database! To buy it, please insert the following request ID inside the BuyTicket function: ", 
-                                                _requestId, ". Make sure you also pay: ", price_to_be_paid)));
+        emit TicketInfo(string(abi.encodePacked("Your ticket has been successfully stored inside our database! To buy it, please insert the following request ID inside the BuyTicket function:  Make sure you also pay: ", price_to_be_paid)));
     }
+
+    // The function below is meant to request and store the information from Italo's website
+    function checkDelay(string memory _trainNumber) public returns (bytes32 requestId) {
+
+        //create a variable and store it temporarily in memory
+        Chainlink.Request memory request = buildChainlinkRequest(jobId, address(this), this.fulfill_delay.selector);
+
+        //set the url to perform the GET request so that the request is built adaptively
+        string memory query = string(abi.encodePacked("https://3032-2001-b07-a3c-400a-c9b0-c2bf-4a44-ad02.ngrok.io", 
+                                                      "/check_delay/?", 
+                                                      "train_number=", _trainNumber));
+        request.add("get", query);
+
+        //set the path to find the requred data in the api response
+        request.add("path", "response");
+
+        //send the request
+        return sendChainlinkRequestTo(Oracle, request, fee);
+    }
+    
+    function fulfill_delay(bytes32 _requestId, bytes32 _response) public recordChainlinkFulfillment(_requestId) {
+        // counter += 1;
+        // Sanity check for the response bytes
+        // "Mi_1639495500_Ro_9983_89"
+        bytesdirisposta = _response;
+
+        //string memory key = bytes32ToString(_requestId);
+
+        // Store the response_string inside a variable, after having transformed the bytes32 response into a string
+        response_string = bytes32ToString(_response);
+        }
 
     struct Ticket {
         address payable owner;
