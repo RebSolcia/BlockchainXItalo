@@ -76,7 +76,7 @@ contract ChainlinkExample is ChainlinkClient {
     }
 
     // FUNCTIONS THAT ARE NEEDED TO TURN A BYTES32 INTO A STRING AND VICE-VERSA
-    function bytes32ToString(bytes32 _bytes32) public pure returns (string memory) {
+    function bytes32ToString(bytes32 _bytes32) private pure returns (string memory) {
         uint8 i = 0;
         while(i < 32 && _bytes32[i] != 0) {
             i++;
@@ -88,7 +88,7 @@ contract ChainlinkExample is ChainlinkClient {
         return string(bytesArray);
     }
     
-    function stringToBytes32(string memory source) public pure returns (bytes32 result) {
+    function stringToBytes32(string memory source) private pure returns (bytes32 result) {
         bytes memory tempEmptyStringTest = bytes(source);
         if (tempEmptyStringTest.length == 0) {
             return 0x0;
@@ -100,7 +100,7 @@ contract ChainlinkExample is ChainlinkClient {
     }
 
     // FUNCTIONS THAT ARE NEEDED TO TURN A STRING INTO A UINT        
-    function StringToUint(string memory numString) public pure returns(uint) {
+    function StringToUint(string memory numString) private pure returns(uint) {
         uint val=0;
         bytes memory stringBytes = bytes(numString);
         for (uint  i =  0; i<stringBytes.length; i++) {
@@ -155,9 +155,12 @@ contract ChainlinkExample is ChainlinkClient {
         //create a variable and store it temporarily in memory
         Chainlink.Request memory request = buildChainlinkRequest(jobId, address(this), this.fulfill.selector);
 
+        string memory ngrok_address = "https://9e37-93-66-104-18.ngrok.io";
+
         //set the url to perform the GET request so that the request is built adaptively
-        string memory query = string(abi.encodePacked("https://9e37-93-66-104-18.ngrok.io/buy_ticket/?departure_station=", 
-                                                      _stationDeparture, "&arrival_station=", _stationArrival, 
+        string memory query = string(abi.encodePacked(ngrok_address, "/request_info/?", 
+                                                      "departure_station=", _stationDeparture, 
+                                                      "&arrival_station=", _stationArrival, 
                                                       "&datetime_departure=", _datetimeDeparture));
         request.add("get", query);
 
