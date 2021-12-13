@@ -106,6 +106,20 @@ contract ChainlinkExample is ChainlinkClient {
             result := mload(add(source, 32))
         }
     }
+        
+    function StringToUint(string memory numString) public pure returns(uint) {
+        uint val=0;
+        bytes memory stringBytes = bytes(numString);
+        for (uint  i =  0; i<stringBytes.length; i++) {
+            uint exp = stringBytes.length - i;
+            bytes1 ival = stringBytes[i];
+            uint8 uval = uint8(ival);
+           uint jval = uval - uint(0x30);
+   
+           val +=  (uint(jval) * (10**(exp-1))); 
+        }
+      return val;
+    }
 
     //define state variables stored on the block chain
     uint256 public currentPrice;
@@ -164,20 +178,6 @@ contract ChainlinkExample is ChainlinkClient {
         RequestToPrice[_requestId] = response_list;
     }
 
-    function StringToUint(string memory numString) public pure returns(uint) {
-        uint val=0;
-        bytes memory stringBytes = bytes(numString);
-        for (uint  i =  0; i<stringBytes.length; i++) {
-            uint exp = stringBytes.length - i;
-            bytes1 ival = stringBytes[i];
-            uint8 uval = uint8(ival);
-           uint jval = uval - uint(0x30);
-   
-           val +=  (uint(jval) * (10**(exp-1))); 
-        }
-      return val;
-    }
-
 
     struct Ticket {
         address payable owner;
@@ -195,7 +195,12 @@ contract ChainlinkExample is ChainlinkClient {
     // Remember there is a placeholder for a certain requestId inside the RequestToPrice mapping and here is where
     // we are going to use it
     function buyTicket(bytes32 _requestId) public payable {
+
+        // Instantiate the actual price from string to uint to allow comparison with the msg.value
         uint _actualPrice = StringToUint(RequestToPrice[_requestId][4]);
+
+        // We should potentially add a way in which we could transform the price from euro to ETH (or whichever value)
+
         // Here i put index 4 but we need to change it as soon as we integrate the function
         require(msg.value >= _actualPrice);
 
