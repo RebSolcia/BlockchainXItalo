@@ -144,6 +144,8 @@ contract ChainlinkExample is ChainlinkClient {
         require(msg.sender == owner);
         _;
     }
+
+    event TicketInfo (string successMessage);
     
     // The function below is meant to request and store the information from Italo's website
     function requestInfo(string memory _stationDeparture, string memory _stationArrival,
@@ -169,13 +171,19 @@ contract ChainlinkExample is ChainlinkClient {
     }
     
     function fulfill(bytes32 _requestId, bytes32 _response) public recordChainlinkFulfillment(_requestId) {
+
         // Store the response_string inside a variable, after having transformed the bytes32 response into a string
         string memory response_string = bytes32ToString(_response);
+
         // Split the string response_string based on underscores, so that you can index the response inside 
         // the RequestToPrice mapping
         string[] memory response_list = split(response_string, "_");
+
         // Store, under the requestId key, the response string you get from the call
         RequestToPrice[_requestId] = response_list;
+
+        // Emit a message telling the user that the transaction went smoothly and the ticket needs to be paid
+        emit TicketInfo(string(abi.encodePacked("Your ticket has been successfully stored inside our database! To buy it, please insert the following request ID inside the BuyTicket function: ", _requestId)));
     }
 
 
