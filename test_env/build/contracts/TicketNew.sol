@@ -139,7 +139,7 @@ contract ChainlinkExample is ChainlinkClient {
         Chainlink.Request memory request = buildChainlinkRequest(jobId, address(this), this.fulfill.selector);
 
         //set the url to perform the GET request so that the request is built adaptively
-        string query = string(abi.encodePacked("https://9e37-93-66-104-18.ngrok.io/buy_ticket/?departure_station=", 
+        string memory query = string(abi.encodePacked("https://9e37-93-66-104-18.ngrok.io/buy_ticket/?departure_station=", 
                                                 _stationDeparture, "&arrival_station=", _stationArrival, 
                                                 "&datetime_departure=", _datetimeDeparture));
         request.add("get", query);
@@ -149,7 +149,7 @@ contract ChainlinkExample is ChainlinkClient {
 
         //multiply the results by 100 to remove decimals
         request.addInt("times", 100);
-        
+
         //send the request
         return sendChainlinkRequestTo(Oracle, request, fee);
     }
@@ -164,6 +164,52 @@ contract ChainlinkExample is ChainlinkClient {
         RequestToPrice[_requestId] = response_list;
     }
 
-    function buyTicket()
-
+    function StringToUint(string memory numString) public pure returns(uint) {
+        uint val=0;
+        bytes memory stringBytes = bytes(numString);
+        for (uint  i =  0; i<stringBytes.length; i++) {
+            uint exp = stringBytes.length - i;
+            bytes1 ival = stringBytes[i];
+            uint8 uval = uint8(ival);
+           uint jval = uval - uint(0x30);
+   
+           val +=  (uint(jval) * (10**(exp-1))); 
+        }
+      return val;
     }
+
+
+    struct Ticket {
+        address payable owner;
+        uint train_number;
+        uint price;
+        uint datetime_departure;
+        uint datetime_arrival_predicted;
+        string station_departure;
+        string station_arrival;
+    }
+
+    mapping(uint => mapping(uint => Ticket[])) TicketsByTrainNumberByDatetime;
+
+    // Function buyTicket enters into action when a call has been made to the webscraper. 
+    // Remember there is a placeholder for a certain requestId inside the RequestToPrice mapping and here is where
+    // we are going to use it
+    function buyTicket(bytes32 _requestId) public payable {
+        uint _actualPrice = StringToUint(RequestToPrice[_requestId][4]);
+        // Here i put index 4 but we need to change it as soon as we integrate the function
+        require(msg.value >= _actualPrice);
+
+        // Instantiate all of the variables by using the RequestToPrice array
+        address payable _owner = msg.sender;
+        uint _trainNumber = 32;
+        uint _price = 40;
+        uint _datetimeDeparture = 40;
+        uint _datetimeArrivalPredicted = 60;
+        string memory _stationDeparture = "Milano Centrale";
+        string memory _stationArrival = "Roma Termini";
+
+        // Push the Ticket inside the Ticket array, given train number and given the datetime
+        TicketsByTrainNumberByDatetime[_trainNumber][_datetimeArrivalPredicted].push(Ticket(_owner, _trainNumber, _price, _datetimeDeparture, _datetimeArrivalPredicted, _stationDeparture,  _stationArrival));
+    }
+
+}
