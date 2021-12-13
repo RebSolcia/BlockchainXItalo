@@ -114,7 +114,7 @@ contract ChainlinkExample is ChainlinkClient {
     bytes32 public jobId;
     uint256 public fee; 
     
-    mapping(bytes32 => uint) RequestToPrice;
+    mapping(bytes32 => string[]) RequestToPrice;
     
     //constructor is run at the time of contract creating
     constructor() public {
@@ -124,32 +124,46 @@ contract ChainlinkExample is ChainlinkClient {
         jobId = "d5270d1c311941d0b08bead21fea7747";
         fee = 0.1 * 10 ** 18; // 0.1 LINK
     }
-    
-    //function below creates a Chainlink API request to get a price
-    //only the owner of the contract can call this function
-    function requestPrice() public onlyOwner returns (bytes32 requestId)
-    {
-        //create a variable and store it temporarily in memory
-        Chainlink.Request memory request = buildChainlinkRequest(jobId, address(this), this.fulfill.selector);
-        //set the url to perform the GET request
-        request.add("get", "https://9e37-93-66-104-18.ngrok.io/buy_ticket/?owner=0x6a522cf77C1B37540bBAB6995783a0B11d7F3d36&ticket_id=7329515239218365070");
-        //set the path to find the requred data in the api response
-        request.add("path", "price");
-        //multiply the results by 100 to remove decimals
-        request.addInt("times", 100);
-        //send the request
-        return sendChainlinkRequestTo(Oracle, request, fee);
-    }
-    
-    function fulfill(bytes32 _requestId, uint256 _price) public recordChainlinkFulfillment(_requestId) 
-    {
-        currentPrice = _price;
-        RequestToPrice[_requestId] = _price;
-    }
-    
+
+    // Create a modifier onlyOwner that checks whether the request has been made by the owner of the contract
     modifier onlyOwner() {
         require(msg.sender == owner);
         _;
     }
+    
+    // The function below is meant to request and store the information from Italo's website
+    function requestInfo(string memory _stationDeparture, string memory _stationArrival,
+                         uint _datetimeDeparture) public returns (bytes32 requestId) {
+
+        //create a variable and store it temporarily in memory
+        Chainlink.Request memory request = buildChainlinkRequest(jobId, address(this), this.fulfill.selector);
+
+        //set the url to perform the GET request so that the request is built adaptively
+        string query = string(abi.encodePacked("https://9e37-93-66-104-18.ngrok.io/buy_ticket/?departure_station=", 
+                                                _stationDeparture, "&arrival_station=", _stationArrival, 
+                                                "&datetime_departure=", _datetimeDeparture));
+        request.add("get", query);
+
+        //set the path to find the requred data in the api response
+        request.add("path", "response");
+
+        //multiply the results by 100 to remove decimals
+        request.addInt("times", 100);
+        
+        //send the request
+        return sendChainlinkRequestTo(Oracle, request, fee);
+    }
+    
+    function fulfill(bytes32 _requestId, bytes32 _response) public recordChainlinkFulfillment(_requestId) {
+        // Store the response_string inside a variable, after having transformed the bytes32 response into a string
+        string memory response_string = bytes32ToString(_response);
+        // Split the string response_string based on underscores, so that you can index the response inside 
+        // the RequestToPrice mapping
+        string[] memory response_list = split(response_string, "_");
+        // Store, under the requestId key, the response string you get from the call
+        RequestToPrice[_requestId] = response_list;
+    }
+
+    function buyTicket()
 
     }
