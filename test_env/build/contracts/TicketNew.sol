@@ -182,11 +182,14 @@ contract ChainlinkExample is ChainlinkClient {
         // the RequestToPrice mapping
         string[] memory response_list = split(response_string, "_");
 
+        string memory price_to_be_paid = response_list[4];
+        
         // Store, under the requestId key, the response string you get from the call
         RequestToPrice[_requestId] = response_list;
 
         // Emit a message telling the user that the transaction went smoothly and the ticket needs to be paid
-        emit TicketInfo(string(abi.encodePacked("Your ticket has been successfully stored inside our database! To buy it, please insert the following request ID inside the BuyTicket function: ", _requestId)));
+        emit TicketInfo(string(abi.encodePacked("Your ticket has been successfully stored inside our database! To buy it, please insert the following request ID inside the BuyTicket function: ", 
+                                                _requestId, ". Make sure you also pay: ", price_to_be_paid)));
     }
 
     struct Ticket {
@@ -212,7 +215,7 @@ contract ChainlinkExample is ChainlinkClient {
         // We should potentially add a way in which we could transform the price from euro to ETH (or whichever value)
 
         // Here i put index 4 but we need to change it as soon as we integrate the function
-        require(msg.value >= _actualPrice);
+        require(msg.value >= _actualPrice, "You have paid too little! Try again.");
 
         // Instantiate all of the variables by using the RequestToPrice array
         address payable _owner = msg.sender;
@@ -225,6 +228,9 @@ contract ChainlinkExample is ChainlinkClient {
 
         // Push the Ticket inside the Ticket array, given train number and given the datetime
         TicketsByTrainNumberByDatetime[_trainNumber][_datetimeArrivalPredicted].push(Ticket(_owner, _trainNumber, _price, _datetimeDeparture, _datetimeArrivalPredicted, _stationDeparture,  _stationArrival));
+
+        // Remove the RequestId from the RequestToPrice mapping to avoid storing useless stuff
+        delete RequestToPrice[_requestId];
     }
 
 }
