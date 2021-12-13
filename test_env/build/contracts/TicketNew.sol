@@ -8,9 +8,8 @@ import "https://github.com/smartcontractkit/chainlink/blob/develop/contracts/src
 //this Chainlink example inherits from ChainlinkClient
 
 contract ChainlinkExample is ChainlinkClient {
-
-    string[] public stringaSplitted;
-
+    
+    // FUNCTIONS THAT ARE NEEDED TO TURN A STRING INTO A LIST OF STRINGS
     function _indexOf(string memory _base, string memory _value, uint _offset)
         internal
         pure
@@ -78,12 +77,7 @@ contract ChainlinkExample is ChainlinkClient {
         return splitArr;
     }
 
-    function MySplit(string memory _base, string memory _value) public {
-        stringaSplitted = split(_base, _value);
-    }
-
-    // Bytes to string
-
+    // FUNCTIONS THAT ARE NEEDED TO TURN A BYTES32 INTO A STRING AND VICE-VERSA
     function bytes32ToString(bytes32 _bytes32) public pure returns (string memory) {
         uint8 i = 0;
         while(i < 32 && _bytes32[i] != 0) {
@@ -106,7 +100,8 @@ contract ChainlinkExample is ChainlinkClient {
             result := mload(add(source, 32))
         }
     }
-        
+
+    // FUNCTIONS THAT ARE NEEDED TO TURN A STRING INTO A UINT        
     function StringToUint(string memory numString) public pure returns(uint) {
         uint val=0;
         bytes memory stringBytes = bytes(numString);
@@ -121,6 +116,13 @@ contract ChainlinkExample is ChainlinkClient {
       return val;
     }
 
+    // TRIAL CODE FOR SPLITTING TO SEE WHETHER IT WORKS
+    string[] public stringaSplitted;
+
+    function MySplit(string memory _base, string memory _value) public {
+        stringaSplitted = split(_base, _value);
+    }
+
     //define state variables stored on the block chain
     uint256 public currentPrice;
     address public owner;
@@ -128,7 +130,8 @@ contract ChainlinkExample is ChainlinkClient {
     bytes32 public jobId;
     uint256 public fee; 
     
-    mapping(bytes32 => string[]) RequestToPrice;
+    // This mapping is made public so that for now we can debug and see whether tickets are added in the right way
+    mapping(bytes32 => string[]) public RequestToPrice;
     
     //constructor is run at the time of contract creating
     constructor() public {
@@ -156,8 +159,8 @@ contract ChainlinkExample is ChainlinkClient {
 
         //set the url to perform the GET request so that the request is built adaptively
         string memory query = string(abi.encodePacked("https://9e37-93-66-104-18.ngrok.io/buy_ticket/?departure_station=", 
-                                                _stationDeparture, "&arrival_station=", _stationArrival, 
-                                                "&datetime_departure=", _datetimeDeparture));
+                                                      _stationDeparture, "&arrival_station=", _stationArrival, 
+                                                      "&datetime_departure=", _datetimeDeparture));
         request.add("get", query);
 
         //set the path to find the requred data in the api response
@@ -185,7 +188,6 @@ contract ChainlinkExample is ChainlinkClient {
         // Emit a message telling the user that the transaction went smoothly and the ticket needs to be paid
         emit TicketInfo(string(abi.encodePacked("Your ticket has been successfully stored inside our database! To buy it, please insert the following request ID inside the BuyTicket function: ", _requestId)));
     }
-
 
     struct Ticket {
         address payable owner;
