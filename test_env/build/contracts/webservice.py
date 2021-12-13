@@ -1,7 +1,5 @@
 """This script is meant to run a webservice"""
 
-import datetime
-
 from fastapi import FastAPI, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.exception_handlers import request_validation_exception_handler
@@ -10,6 +8,19 @@ import logging
 import os
 import uvicorn
 import sqlite3
+
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.chrome.service import Service
+
+# Change the following path
+ser = Service("/Users/silvi/Downloads/chromedriver_win32/chromedriver.exe") 
+
+
+import time
+import datetime
+
 
 # Instantiate the first variables and exception handlers
 
@@ -29,6 +40,14 @@ tags_metadata = [
     {
         "name": "buyTicket",
         "description": "Endpoints that allows the purchase of tickets."
+    },
+    {
+        "name": "searchTicket",
+        "description": "Endpoints that allows the search of tickets."
+    },
+    {
+        "name": "checkDelay",
+        "description": "Endpoints that allows to check if a train had a delay of more than 60 minutes."
     }
 ]
 
@@ -268,6 +287,129 @@ async def buy_ticket(
     }
 
     return json_ticket
+
+
+
+@app.get(
+    path="/request_info/",
+    tags=["searchTicket"],
+    summary="Search Tickets",
+    description="Main method to search for tickets on Italo's website."
+)
+async def search_ticket(
+        request: Request,
+        
+        departure_station: str = Query(
+            default=...,
+            description="Station of departure."
+        ),
+        arrival_station: str = Query(
+            default=...,
+            description="Station of arrival."
+        ),
+        departure_hour: int = Query(
+            default=0,
+            description="Min hour of the departure."
+        ),
+):
+    # Scrape Italo's website to get first available train after the specified hour
+    train_URL = 'https://www.italotreno.it/en/destinations-timetable/trains-schedules'    
+    
+    options = webdriver.ChromeOptions()
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
+
+    driver = webdriver.Chrome(service = ser, options=options) # or webdriver.Chrome(executable_path=local_path_of_driver, options=options)
+    driver.get(train_URL)
+
+    search_box_from = driver.find_element_by_xpath('/html/body/main/section[3]/div[2]/form/div[1]/div/table/tbody/tr[1]/td[1]/fieldset/div/input[1]').send_keys(departure_station)
+    search_box_to = driver.find_element_by_xpath('/html/body/main/section[3]/div[2]/form/div[1]/div/table/tbody/tr[1]/td[3]/fieldset/div/input[1]').send_keys(arrival_station)
+
+    button = driver.find_element_by_xpath('/html/body/main/section[3]/div[2]/form/div[1]/div/table/tbody/tr[1]/td[4]/div/a')
+    webdriver.ActionChains(driver).click_and_hold(button).perform()
+    driver.execute_script("arguments[0].click();", button)
+
+    time.sleep(10)
+
+    num_options = len(driver.find_elements_by_xpath("/html/body/main/section[3]/div[3]/div[2]/table/tbody/tr"))
+    if num_options == 0:
+        return f"Sorry, no routes available from {departure_station} to {arrival_station}"
+    
+    timing = []
+    departure_hour = str(departure_hour)+"00"
+    for i in range(1, num_options + 1):
+        time_dep = driver.find_element_by_xpath(f"/html/body/main/section[3]/div[3]/div[2]/table/tbody/tr[{i}]/td[1]/p[1]").get_attribute("innerText")
+        time_arr = driver.find_element_by_xpath(f"/html/body/main/section[3]/div[3]/div[2]/table/tbody/tr[{i}]/td[2]/p[1]").get_attribute("innerText")
+        if (int(time_dep[:2]+time_arr[3:]) - int(departure_hour)) >= 0:
+            timing.append((i, time_dep, time_arr))
+    
+    if len(timing) == 0:
+        return f"Sorry, no available trains after {departure_hour[:-2]}:00"
+    
+    # If same departure time, first train is usually available on weekdays+saturdays, the second one on sundays
+    x = 0
+    if timing[0][1] == timing[1][1]:
+        if (datetime.datetime.today().weekday() + 1) == 6:
+            x = 1
+
+    choice = timing[x][0] 
+    
+    time_of_departure, time_of_arrival = timing[x][1:]
+    today = datetime.date.today()
+    day_dep = today.day+1
+    if (int(time_of_arrival.split(":")[0]) - int(time_of_departure.split(":")[0])) < 0:
+        day_arr = day_dep + 1
+    else:
+        day_arr = day_dep
+        
+    datetime_dep = datetime.datetime(today.year, today.month, day_dep, int(time_of_departure.split(":")[0]), int(time_of_departure.split(":")[1]))
+    unix_departure = round(time.mktime(datetime_dep.timetuple()))
+    datetime_arr = datetime.datetime(today.year, today.month, day_arr, int(time_of_arrival.split(":")[0]), int(time_of_arrival.split(":")[1]))
+    unix_arrival = round(time.mktime(datetime_arr.timetuple()))
+    
+    train_number = driver.find_element_by_xpath(f'/html/body/main/section[3]/div[3]/div[2]/table/tbody/tr[{choice}]/td[4]/p[2]').get_attribute("innerText")
+    
+    button_book = driver.find_element_by_xpath('/html/body/main/section[3]/div[3]/div[2]/table/tbody/tr[1]/td[7]/div/div')
+    driver.execute_script("arguments[0].click();", button_book)
+    price = driver.find_element_by_xpath('/html/body/form/div/div[2]/div[6]/div[1]/div[2]/div/ul/div/div/li[2]/p[3]').get_attribute("innerText")
+    
+    
+    ticket = f"{unix_departure}_{departure_station}_{unix_arrival}_{arrival_station}_{train_number}_{price}"
+       
+    return ticket
+    
+    
+
+
+@app.get(
+    path="/check_delay/",
+    tags=["checkDelay"],
+    summary="Check Delay",
+    description="Main method to check if a train had a delay of more than 60 minutes."
+)
+async def check_delay(
+        request: Request,
+        
+        train_number: str = Query(
+            default=...,
+            description="Train number."
+        )
+):
+    # Scrape Italo's website to check if train has a delay
+    driver = webdriver.Chrome(service = ser)  # or webdriver.Chrome(executable_path=local_path_of_driver) 
+    base_URL = 'https://italoinviaggio.italotreno.it/en/train'
+    driver.get(base_URL + '/' + str(train_number))
+    
+    try:
+        delay = driver.find_element_by_xpath('/html/body/div[2]/section/div/div/div[1]/div/div/div[3]/span[2]').get_attribute("innerText")
+        if (int(delay.split()[0])) >= 60:
+            return "True"
+        else:
+            return "False"
+    except:
+        return "False"
+    
+    
 
 
 if __name__ == "__main__":
