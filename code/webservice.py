@@ -1,14 +1,15 @@
 """This script is meant to run a webservice"""
 
-from fastapi import FastAPI, Query, Request
-from fastapi.exceptions import RequestValidationError
-from fastapi.exception_handlers import request_validation_exception_handler
-
 import logging
 import os
 import uvicorn
-import sqlite3
+import time
+import datetime
 import numpy as np
+
+from fastapi import FastAPI, Query, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.exception_handlers import request_validation_exception_handler
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -19,10 +20,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 
 # Change the following path
-ser = Service("../chromedriver.exe")
-
-import time
-import datetime
+exe_path = os.path.join(os.getcwd(), "chromedriver.exe")
+ser = Service(exe_path)
 
 # Instantiate the first variables and exception handlers
 
@@ -31,18 +30,6 @@ VERSION = "0.0.1"
 logger = logging.getLogger(__name__)
 
 tags_metadata = [
-    {
-        "name": "upload",
-        "description": "Endpoints that perform the upload of tickets."
-    },
-    {
-        "name": "seeTicket",
-        "description": "Endpoints that perform the broadcasting of tickets."
-    },
-    {
-        "name": "buyTicket",
-        "description": "Endpoints that allows the purchase of tickets."
-    },
     {
         "name": "searchTicket",
         "description": "Endpoints that allows the search of tickets."
@@ -320,8 +307,5 @@ async def fake_delay(
 
 if __name__ == "__main__":
     print("INFO: To read the documentation: http://localhost:400/docs")
-    print("INFO: Run test at http://localhost:400/upload_tickets/?owner=0x14408Ee49aC5B4BCce27E8699fEaaBD15e222D12"
-          "&train_number=7138&price=30&datetime_departure=40&datetime_arrival_predicted=50&station_departure=Venice"
-          "&station_arrival=Florence&n_tickets=20")
 
     uvicorn.run(app="webservice:app", host="localhost", port=400)
