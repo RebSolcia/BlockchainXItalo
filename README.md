@@ -6,7 +6,7 @@ This project is meant to help Italo improve their compensation process by making
 
 
 
-<img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Ethereum.png" width="150">
+<img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Ethereum.png" width="100">
 
 
 <img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Remix.png" width="100">
@@ -18,6 +18,6 @@ This project is meant to help Italo improve their compensation process by making
 <img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Metamask.png" width="100">
 
 
-<img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Kovan.png" width="150">
+<img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Kovan.png" width="100">
 
 
