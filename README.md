@@ -1,5 +1,5 @@
 # BlockchainXItalo
-<img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Ethereum.png" width="100"> <img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Italo.png" width="200">
+<p align="center"><img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Ethereum.png" width="100"> <img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Italo.png" width="200"/></p>
 
 This project is meant to help Italo improve their compensation process by making use of blockchain technologies, especially smart contracts.
 
@@ -27,11 +27,28 @@ See the [Library Utils contract](https://github.com/RebSolcia/BlockchainXItalo/b
 See the [Compensation contract](https://github.com/RebSolcia/BlockchainXItalo/blob/main/code/TicketNew.sol).
 
 
+# HOW TO (TEST) - Run the code, step by step
+## Step 0 - Before Running
+
+## Step 1 - Deploy the contract in Remix
+
+## Step 2 - Book a ticket
+
+## Step 3 - Buy a ticket
+
+## Step 4 - Ask for a refund
 
 
+# HOW TO (PROD) - Run the code, step by step
+## Step 0 - Before Running
 
+## Step 1 - Deploy the contract in Remix
 
+## Step 2 - Book a ticket
 
+## Step 3 - Buy a ticket
+
+## Step 4 - Ask for a refund
 
 
 
