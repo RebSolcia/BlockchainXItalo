@@ -328,18 +328,25 @@ async def search_ticket(
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('useAutomationExtension', False)
 
-    driver = webdriver.Chrome(service=ser, options=options)  # or webdriver.Chrome(executable_path=local_path_of_driver, options=options)
+    driver = webdriver.Chrome(service=ser,
+                              options=options)  # or webdriver.Chrome(executable_path=local_path_of_driver, options=options)
     driver.get(train_URL)
 
-    search_box_from = driver.find_element_by_xpath('/html/body/main/section[3]/div[2]/form/div[1]/div/table/tbody/tr[1]/td[1]/fieldset/div/input[1]').send_keys(departure_station)
-    search_box_to = driver.find_element_by_xpath('/html/body/main/section[3]/div[2]/form/div[1]/div/table/tbody/tr[1]/td[3]/fieldset/div/input[1]').send_keys(arrival_station)
+    search_box_from = driver.find_element_by_xpath(
+        '/html/body/main/section[3]/div[2]/form/div[1]/div/table/tbody/tr[1]/td[1]/fieldset/div/input[1]').send_keys(
+        departure_station)
+    search_box_to = driver.find_element_by_xpath(
+        '/html/body/main/section[3]/div[2]/form/div[1]/div/table/tbody/tr[1]/td[3]/fieldset/div/input[1]').send_keys(
+        arrival_station)
 
-    button = driver.find_element_by_xpath('/html/body/main/section[3]/div[2]/form/div[1]/div/table/tbody/tr[1]/td[4]/div/a')
+    button = driver.find_element_by_xpath(
+        '/html/body/main/section[3]/div[2]/form/div[1]/div/table/tbody/tr[1]/td[4]/div/a')
     webdriver.ActionChains(driver).click_and_hold(button).perform()
     driver.execute_script("arguments[0].click();", button)
-    
+
     try:
-        element_present = EC.presence_of_element_located((By.XPATH, '/html/body/main/section[3]/div[3]/div[2]/table/tbody/tr[1]/td[1]/p[1]'))
+        element_present = EC.presence_of_element_located(
+            (By.XPATH, '/html/body/main/section[3]/div[3]/div[2]/table/tbody/tr[1]/td[1]/p[1]'))
         WebDriverWait(driver, 15).until(element_present)
     except TimeoutException:
         return "Timeout"
@@ -347,7 +354,7 @@ async def search_ticket(
     num_options = len(driver.find_elements_by_xpath("/html/body/main/section[3]/div[3]/div[2]/table/tbody/tr"))
     if num_options == 0:
         return f"Sorry, no routes available from {departure_station} to {arrival_station}"
-    
+
     timing = []
     departure_hour = str(departure_hour) + "00"
     for i in range(1, num_options + 1):
@@ -361,7 +368,7 @@ async def search_ticket(
 
     if len(timing) == 0:
         return f"Sorry, no available trains after {departure_hour[:-2]}:00"
-    
+
     x = 0
     choice = timing[x][0]
 
@@ -373,18 +380,20 @@ async def search_ticket(
     else:
         day_arr = day_dep
 
-    datetime_arr = datetime.datetime(today.year, today.month, day_arr, int(time_of_arrival.split(":")[0]), int(time_of_arrival.split(":")[1]))
+    datetime_arr = datetime.datetime(today.year, today.month, day_arr, int(time_of_arrival.split(":")[0]),
+                                     int(time_of_arrival.split(":")[1]))
     unix_arrival = round(time.mktime(datetime_arr.timetuple()))
 
-    train_number = driver.find_element_by_xpath(f'/html/body/main/section[3]/div[3]/div[2]/table/tbody/tr[{choice}]/td[4]/p[2]').get_attribute("innerText")
+    train_number = driver.find_element_by_xpath(
+        f'/html/body/main/section[3]/div[3]/div[2]/table/tbody/tr[{choice}]/td[4]/p[2]').get_attribute("innerText")
 
     departure_station_new = departure_station[:2]
     arrival_station_new = arrival_station[:2]
 
-    price = np.random.randint(50,100)
+    price = np.random.randint(50, 100)
 
     ticket = f"{departure_station_new}_{unix_arrival}_{arrival_station_new}_{train_number}_{price}"
-    
+
     return {"response": ticket}
 
 
@@ -396,52 +405,51 @@ async def search_ticket(
 )
 async def fake_ticket_search(
         request: Request,
-        
+
         # departure_station, arrival_station, time_of_departure, time_of_arrival, price, train_number
         departure_station: str = Query(
             default=...,
             description="Station of departure."
-            ),
+        ),
         arrival_station: str = Query(
             default=...,
             description="Station of arrival."
-            ),
+        ),
         train_number: str = Query(
             default=...,
             description="Train number."
-            ),
+        ),
         time_of_departure: str = Query(
             default=...,
             description="Time of departure (hh:mm)."
-            ),
+        ),
         time_of_arrival: str = Query(
             default=...,
             description="Time of expected arrival (hh:mm)."
-            ),
+        ),
         price: str = Query(
             default=...,
             description="Price of one ticket (e.g. 59.90)."
-            )
+        )
 ):
-    
     today = datetime.date.today()
     day_dep = today.day + 1
     if (int(time_of_arrival.split(":")[0]) - int(time_of_departure.split(":")[0])) < 0:
         day_arr = day_dep + 1
     else:
         day_arr = day_dep
-    datetime_arr = datetime.datetime(today.year, today.month, day_arr, int(time_of_arrival.split(":")[0]), int(time_of_arrival.split(":")[1]))
+    datetime_arr = datetime.datetime(today.year, today.month, day_arr, int(time_of_arrival.split(":")[0]),
+                                     int(time_of_arrival.split(":")[1]))
     unix_arrival = round(time.mktime(datetime_arr.timetuple()))
-    
+
     price_rounded = int(float(price[:-2]))
 
     departure_station_new = departure_station[:2]
     arrival_station_new = arrival_station[:2]
-    
+
     ticket = f"{departure_station_new}_{unix_arrival}_{arrival_station_new}_{train_number}_{price_rounded}"
 
     return {"response": ticket}
-    
 
 
 @app.get(
@@ -489,30 +497,25 @@ async def fake_delay(
         train_number: str = Query(
             default=...,
             description="Train number."
-            ),
+        ),
         expected_arr: str = Query(
             default=...,
             description="Unix datetime of expected arrival."
-            ),
+        ),
         delay: str = Query(
             default=...,
             description="Minutes of delay."
-            ),
+        ),
         thr: str = Query(
             default=60,
             description="Threshold for delay, default is 60 minutes."
-            )
-        
+        )
+
 ):
-    
     if delay >= thr:
         return {"response": f"True_{train_number}_{expected_arr}_{delay}"}
     else:
         return {"response": f"False_{train_number}_{expected_arr}_{delay}"}
-
-
-
-
 
 
 if __name__ == "__main__":
