@@ -207,21 +207,15 @@ contract ChainlinkExample is ChainlinkClient {
         string memory counter_str = UintToString(counter);
         bytes32 counter_key = keccak256(abi.encode(counter_str));
 
-        // Sanity check for the response bytes
-        // "Mi_1639495500_Ro_9983_89"
-        bytesdirisposta = _response;
-
-        //string memory key = bytes32ToString(_requestId);
-
         // Store the response_string inside a variable, after having transformed the bytes32 response into a string
-        response_string = bytes32ToString(_response);
+        string memory response_string_info = bytes32ToString(_response);
 
         // Split the string response_string based on underscores, so that you can index the response inside 
         // the RequestToPrice mapping
-        string[] memory response_list = split(response_string, "_");
+        string[] memory response_list_info = split(response_string_info, "_");
         
         // Store, under the requestId key, the response string you get from the call
-        RequestToPrice[counter_key] = response_list;
+        RequestToPrice[counter_key] = response_list_info;
     }
 
     // The function below is meant to request and store the information from Italo's website
@@ -244,12 +238,29 @@ contract ChainlinkExample is ChainlinkClient {
     }
     
     function fulfill_delay(bytes32 _requestId, bytes32 _response) public recordChainlinkFulfillment(_requestId) {
-        // counter += 1;
-        // Sanity check for the response bytes
-        // "Mi_1639495500_Ro_9983_89"
+        // Parse the response as "trainnumber_datetimearrivalpredicted_minutesofdelay"
         bytesdirisposta = _response;
 
-        //string memory key = bytes32ToString(_requestId);
+        // Store the response_string inside a variable, after having transformed the bytes32 response into a string
+        string memory response_string_delay = bytes32ToString(_response);
+
+        // Split the string response_string based on underscores, so that you can index the response inside 
+        // the RequestToPrice mapping
+        string[] memory response_list_delay = split(response_string_delay, "_");
+
+        uint _trainNumber_Delay = StringToUint(response_list_delay[0]);
+        uint _datetimeArrivalPredicted_Delay = StringToUint(response_list_delay[1]);
+        uint _minutesOfDelay = StringToUint(response_list_delay[2]);
+
+        if (_minutesOfDelay > 60) {
+            uint length_ticketlist = TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay].length;
+            for (uint i=0; i < length_ticketlist; i++){
+                address payable owner_to_be_repaid = TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i].owner;
+                owner_to_be_repaid.transfer(address(this).balance);
+            }
+        }
+        
+        
 
         // Store the response_string inside a variable, after having transformed the bytes32 response into a string
         response_string = bytes32ToString(_response);
@@ -282,18 +293,23 @@ contract ChainlinkExample is ChainlinkClient {
 
         // Instantiate all of the variables by using the RequestToPrice array
         address payable _owner = msg.sender;
+
+        string memory _stationDeparture = RequestToPrice[_requestId][0];
+        uint _datetimeArrivalPredicted = StringToUint(RequestToPrice[_requestId][1]);
+        string memory _stationArrival = RequestToPrice[_requestId][2];
         uint _trainNumber = StringToUint(RequestToPrice[_requestId][3]);
         uint _price = StringToUint(RequestToPrice[_requestId][4]);
+
         uint _datetimeDeparture = 14;
-        uint _datetimeArrivalPredicted = StringToUint(RequestToPrice[_requestId][1]);
-        string memory _stationDeparture = RequestToPrice[_requestId][0];
-        string memory _stationArrival = RequestToPrice[_requestId][2];
+        
+        // Emit an event telling the user in which case he's supposed to ask for a refund 
+        emit TicketInfo(string(abi.encodePacked("You have successfully bought your ticket from ", _stationDeparture, " to ", _stationArrival, ". The train ", _trainNumber ," is scheduled to arrive at ", _datetimeArrivalPredicted, ". Make sure to ask for a refund in case of delay! Thanks for choosing our service")));
 
         // Push the Ticket inside the Ticket array, given train number and given the datetime
         TicketsByTrainNumberByDatetime[_trainNumber][_datetimeArrivalPredicted].push(Ticket(_owner, _trainNumber, _price, _datetimeDeparture, _datetimeArrivalPredicted, _stationDeparture,  _stationArrival));
 
         // Remove the RequestId from the RequestToPrice mapping to avoid storing useless stuff
-        //delete RequestToPrice[_requestId];
+        delete RequestToPrice[_requestId];
     }
 
 }
