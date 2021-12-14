@@ -97,7 +97,7 @@ contract ChainlinkExample is ChainlinkClient {
     }
 
     // Function used to turn strings into keccak bytes32
-    function TurnCounterIntoKeccak(string memory _counter) public pure returns (bytes32) {
+    function CounterToKeccak(string memory _counter) public pure returns (bytes32) {
         bytes32 kecca_hashed_counter = keccak256(abi.encode(_counter));
         return (kecca_hashed_counter);
     }
@@ -125,7 +125,7 @@ contract ChainlinkExample is ChainlinkClient {
         uint _price = Converter.StringToUint(RequestToPrice[_requestId][4]);
         
         // Emit an event telling the user in which case he's supposed to ask for a refund 
-        emit TicketInfo(string(abi.encodePacked("You have successfully bought your ticket from ", _stationDeparture, " to ", _stationArrival, ". The train ", _trainNumber ," is scheduled to arrive at ", _datetimeArrivalPredicted, ". Make sure to ask for a refund in case of delay! Thanks for choosing our service")));
+        emit TicketInfo(string(abi.encodePacked("You have successfully bought your ticket from ", _stationDeparture, " to ", _stationArrival, ". The train ", RequestToPrice[_requestId][3] ," is scheduled to arrive at ", RequestToPrice[_requestId][1], ". Make sure to ask for a refund in case of delay! Thanks for choosing our service")));
 
         // Push the Ticket inside the Ticket array, given train number and given the datetime
         TicketsByTrainNumberByDatetime[_trainNumber][_datetimeArrivalPredicted].push(Ticket(_owner, _trainNumber, _price, _datetimeArrivalPredicted, _stationDeparture,  _stationArrival));
