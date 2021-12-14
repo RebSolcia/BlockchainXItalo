@@ -1,5 +1,5 @@
 # BlockchainXItalo
-<p align="center"><img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Ethereum.png" width="50"> <p align="center"><img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/For.png" width="30"> <img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Italo.png" width="120"/></p>
+<p align="center"><img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Ethereum.png" width="80"> <img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/For.png" width="40"> <img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Italo.png" width="180"/></p>
 
 This project is meant to help Italo improve their compensation process by making use of blockchain technologies, especially smart contracts.
 
