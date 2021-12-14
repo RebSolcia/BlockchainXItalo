@@ -114,6 +114,25 @@ contract ChainlinkExample is ChainlinkClient {
       return val;
     }
 
+    function UintToString(uint _i) internal pure returns (string memory _uintAsString) {
+        if (_i == 0) {
+            return "0";
+        }
+        uint j = _i;
+        uint len;
+        while (j != 0) {
+            len++;
+            j /= 10;
+        }
+        bytes memory bstr = new bytes(len);
+        uint k = len - 1;
+        while (_i != 0) {
+            bstr[k--] = byte(uint8(48 + _i % 10));
+            _i /= 10;
+        }
+        return string(bstr);
+    }
+
     // TRIAL CODE FOR SPLITTING TO SEE WHETHER IT WORKS
     string[] public stringaSplitted;
 
@@ -159,8 +178,8 @@ contract ChainlinkExample is ChainlinkClient {
         Chainlink.Request memory request = buildChainlinkRequest(jobId, address(this), this.fulfill.selector);
 
         //set the url to perform the GET request so that the request is built adaptively
-        string memory query = string(abi.encodePacked("https://3032-2001-b07-a3c-400a-c9b0-c2bf-4a44-ad02.ngrok.io", 
-                                                      "/request_info/?", 
+        string memory query = string(abi.encodePacked("https://fd5e-2001-b07-a3c-400a-b561-bc22-61b9-a720.ngrok.io", 
+                                                      "/request_info_mock/?", 
                                                       "departure_station=", _stationDeparture, 
                                                       "&arrival_station=", _stationArrival, 
                                                       "&departure_hour=", _datetimeDeparture));
@@ -169,12 +188,25 @@ contract ChainlinkExample is ChainlinkClient {
         //set the path to find the requred data in the api response
         request.add("path", "response");
 
+        // Keep track of the requests with the counter
+        counter += 1;
+        string memory counter_str = UintToString(counter);
+        emit TicketInfo(string(abi.encodePacked("Your ticket has been successfully stored inside our database! To buy it, please insert the following request ID inside the GetKeccak function:", counter_str)));
+
         //send the request
         return sendChainlinkRequestTo(Oracle, request, fee);
     }
+
+    function TurnCounterIntoKeccak(string memory _counter) public pure returns (bytes32) {
+        bytes32 kecca_hashed_counter = keccak256(abi.encode(_counter));
+        return (kecca_hashed_counter);
+    }
     
     function fulfill(bytes32 _requestId, bytes32 _response) public recordChainlinkFulfillment(_requestId) {
-        // counter += 1;
+
+        string memory counter_str = UintToString(counter);
+        bytes32 counter_key = keccak256(abi.encode(counter_str));
+
         // Sanity check for the response bytes
         // "Mi_1639495500_Ro_9983_89"
         bytesdirisposta = _response;
@@ -187,14 +219,9 @@ contract ChainlinkExample is ChainlinkClient {
         // Split the string response_string based on underscores, so that you can index the response inside 
         // the RequestToPrice mapping
         string[] memory response_list = split(response_string, "_");
-
-        string memory price_to_be_paid = response_list[4];
         
         // Store, under the requestId key, the response string you get from the call
-        RequestToPrice[_requestId] = response_list;
-
-        // Emit a message telling the user that the transaction went smoothly and the ticket needs to be paid
-        emit TicketInfo(string(abi.encodePacked("Your ticket has been successfully stored inside our database! To buy it, please insert the following request ID inside the BuyTicket function:  Make sure you also pay: ", price_to_be_paid)));
+        RequestToPrice[counter_key] = response_list;
     }
 
     // The function below is meant to request and store the information from Italo's website
@@ -204,7 +231,7 @@ contract ChainlinkExample is ChainlinkClient {
         Chainlink.Request memory request = buildChainlinkRequest(jobId, address(this), this.fulfill_delay.selector);
 
         //set the url to perform the GET request so that the request is built adaptively
-        string memory query = string(abi.encodePacked("https://3032-2001-b07-a3c-400a-c9b0-c2bf-4a44-ad02.ngrok.io", 
+        string memory query = string(abi.encodePacked("https://fd5e-2001-b07-a3c-400a-b561-bc22-61b9-a720.ngrok.io", 
                                                       "/check_delay/?", 
                                                       "train_number=", _trainNumber));
         request.add("get", query);
@@ -238,7 +265,7 @@ contract ChainlinkExample is ChainlinkClient {
         string station_arrival;
     }
 
-    mapping(uint => mapping(uint => Ticket[])) TicketsByTrainNumberByDatetime;
+    mapping(uint => mapping(uint => Ticket[])) public TicketsByTrainNumberByDatetime;
 
     // Function buyTicket enters into action when a call has been made to the webscraper. 
     // Remember there is a placeholder for a certain requestId inside the RequestToPrice mapping and here is where
@@ -266,7 +293,7 @@ contract ChainlinkExample is ChainlinkClient {
         TicketsByTrainNumberByDatetime[_trainNumber][_datetimeArrivalPredicted].push(Ticket(_owner, _trainNumber, _price, _datetimeDeparture, _datetimeArrivalPredicted, _stationDeparture,  _stationArrival));
 
         // Remove the RequestId from the RequestToPrice mapping to avoid storing useless stuff
-        delete RequestToPrice[_requestId];
+        //delete RequestToPrice[_requestId];
     }
 
 }
