@@ -282,12 +282,12 @@ contract ChainlinkExample is ChainlinkClient {
 
         // Instantiate all of the variables by using the RequestToPrice array
         address payable _owner = msg.sender;
-        uint _trainNumber = 32;
-        uint _price = 40;
-        uint _datetimeDeparture = 40;
-        uint _datetimeArrivalPredicted = 60;
-        string memory _stationDeparture = "Milano Centrale";
-        string memory _stationArrival = "Roma Termini";
+        uint _trainNumber = StringToUint(RequestToPrice[_requestId][3]);
+        uint _price = StringToUint(RequestToPrice[_requestId][4]);
+        uint _datetimeDeparture = 14;
+        uint _datetimeArrivalPredicted = StringToUint(RequestToPrice[_requestId][1]);
+        string memory _stationDeparture = RequestToPrice[_requestId][0];
+        string memory _stationArrival = RequestToPrice[_requestId][2];
 
         // Push the Ticket inside the Ticket array, given train number and given the datetime
         TicketsByTrainNumberByDatetime[_trainNumber][_datetimeArrivalPredicted].push(Ticket(_owner, _trainNumber, _price, _datetimeDeparture, _datetimeArrivalPredicted, _stationDeparture,  _stationArrival));
