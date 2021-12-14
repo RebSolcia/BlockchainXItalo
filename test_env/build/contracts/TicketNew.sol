@@ -1,143 +1,18 @@
 pragma solidity ^0.5.0;
 
 import "https://github.com/smartcontractkit/chainlink/blob/develop/contracts/src/v0.5/ChainlinkClient.sol";
+import "LibraryUtils.sol";
 
 //contracts are like classes
 //this Chainlink example inherits from ChainlinkClient
 
 contract ChainlinkExample is ChainlinkClient {
-    
-    // FUNCTIONS THAT ARE NEEDED TO TURN A STRING INTO A LIST OF STRINGS
-    function _indexOf(string memory _base, string memory _value, uint _offset)
-        internal
-        pure
-        returns (int) {
-        bytes memory _baseBytes = bytes(_base);
-        bytes memory _valueBytes = bytes(_value);
-
-        assert(_valueBytes.length == 1);
-
-        for (uint i = _offset; i < _baseBytes.length; i++) {
-            if (_baseBytes[i] == _valueBytes[0]) {
-                return int(i);
-            }
-        }
-
-        return -1;
-    }
-
-    function indexOf(string memory _base, string memory _value)
-        internal
-        pure
-        returns (int) {
-        return _indexOf(_base, _value, 0);
-    }
-    
-    function split(string memory _base, string memory _value)
-        internal
-        pure
-        returns (string[] memory splitArr) {
-        bytes memory _baseBytes = bytes(_base);
-
-        uint _offset = 0;
-        uint _splitsCount = 1;
-        while (_offset < _baseBytes.length - 1) {
-            int _limit = _indexOf(_base, _value, _offset);
-            if (_limit == -1)
-                break;
-            else {
-                _splitsCount++;
-                _offset = uint(_limit) + 1;
-            }
-        }
-
-        splitArr = new string[](_splitsCount);
-
-        _offset = 0;
-        _splitsCount = 0;
-        while (_offset < _baseBytes.length - 1) {
-
-            int _limit = _indexOf(_base, _value, _offset);
-            if (_limit == - 1) {
-                _limit = int(_baseBytes.length);
-            }
-
-            string memory _tmp = new string(uint(_limit) - _offset);
-            bytes memory _tmpBytes = bytes(_tmp);
-
-            uint j = 0;
-            for (uint i = _offset; i < uint(_limit); i++) {
-                _tmpBytes[j++] = _baseBytes[i];
-            }
-            _offset = uint(_limit) + 1;
-            splitArr[_splitsCount++] = string(_tmpBytes);
-        }
-        return splitArr;
-    }
-
-    // FUNCTIONS THAT ARE NEEDED TO TURN A BYTES32 INTO A STRING AND VICE-VERSA
-    function bytes32ToString(bytes32 _bytes32) private pure returns (string memory) {
-        uint8 i = 0;
-        while(i < 32 && _bytes32[i] != 0) {
-            i++;
-        }
-        bytes memory bytesArray = new bytes(i);
-        for (i = 0; i < 32 && _bytes32[i] != 0; i++) {
-            bytesArray[i] = _bytes32[i];
-        }
-        return string(bytesArray);
-    }
-    
-    function stringToBytes32(string memory source) public pure returns (bytes32 result) {
-        bytes memory tempEmptyStringTest = bytes(source);
-        if (tempEmptyStringTest.length == 0) {
-            return 0x0;
-        }
-
-        assembly { // solhint-disable-line no-inline-assembly
-            result := mload(add(source, 32))
-        }
-    }
-
-    // FUNCTIONS THAT ARE NEEDED TO TURN A STRING INTO A UINT        
-    function StringToUint(string memory numString) private pure returns(uint) {
-        uint val=0;
-        bytes memory stringBytes = bytes(numString);
-        for (uint  i =  0; i<stringBytes.length; i++) {
-            uint exp = stringBytes.length - i;
-            bytes1 ival = stringBytes[i];
-            uint8 uval = uint8(ival);
-           uint jval = uval - uint(0x30);
-   
-           val +=  (uint(jval) * (10**(exp-1))); 
-        }
-      return val;
-    }
-
-    function UintToString(uint _i) internal pure returns (string memory _uintAsString) {
-        if (_i == 0) {
-            return "0";
-        }
-        uint j = _i;
-        uint len;
-        while (j != 0) {
-            len++;
-            j /= 10;
-        }
-        bytes memory bstr = new bytes(len);
-        uint k = len - 1;
-        while (_i != 0) {
-            bstr[k--] = byte(uint8(48 + _i % 10));
-            _i /= 10;
-        }
-        return string(bstr);
-    }
 
     // TRIAL CODE FOR SPLITTING TO SEE WHETHER IT WORKS
     string[] public stringaSplitted;
 
     function MySplit(string memory _base, string memory _value) public {
-        stringaSplitted = split(_base, _value);
+        stringaSplitted = Converter.split(_base, _value);
     }
     
     //constructor is run at the time of contract creating
@@ -202,7 +77,7 @@ contract ChainlinkExample is ChainlinkClient {
 
         // Keep track of the requests with the counter
         counter += 1;
-        string memory counter_str = UintToString(counter);
+        string memory counter_str = Converter.UintToString(counter);
         emit TicketInfo(string(abi.encodePacked("Your ticket has been successfully stored inside our database! To buy it, please insert the following request ID inside the GetKeccak function:", counter_str)));
 
         //send the request
@@ -216,15 +91,15 @@ contract ChainlinkExample is ChainlinkClient {
     
     function fulfill(bytes32 _requestId, bytes32 _response) public recordChainlinkFulfillment(_requestId) {
 
-        string memory counter_str = UintToString(counter);
+        string memory counter_str = Converter.UintToString(counter);
         bytes32 counter_key = keccak256(abi.encode(counter_str));
 
         // Store the response_string inside a variable, after having transformed the bytes32 response into a string
-        string memory response_string_info = bytes32ToString(_response);
+        string memory response_string_info = Converter.bytes32ToString(_response);
 
         // Split the string response_string based on underscores, so that you can index the response inside 
         // the RequestToPrice mapping
-        string[] memory response_list_info = split(response_string_info, "_");
+        string[] memory response_list_info = Converter.split(response_string_info, "_");
         
         // Store, under the requestId key, the response string you get from the call
         RequestToPrice[counter_key] = response_list_info;
@@ -254,15 +129,15 @@ contract ChainlinkExample is ChainlinkClient {
         bytesdirisposta = _response;
 
         // Store the response_string inside a variable, after having transformed the bytes32 response into a string
-        string memory response_string_delay = bytes32ToString(_response);
+        string memory response_string_delay = Converter.bytes32ToString(_response);
 
         // Split the string response_string based on underscores, so that you can index the response inside 
         // the RequestToPrice mapping
-        string[] memory response_list_delay = split(response_string_delay, "_");
+        string[] memory response_list_delay = Converter.split(response_string_delay, "_");
 
-        uint _trainNumber_Delay = StringToUint(response_list_delay[0]);
-        uint _datetimeArrivalPredicted_Delay = StringToUint(response_list_delay[1]);
-        uint _minutesOfDelay = StringToUint(response_list_delay[2]);
+        uint _trainNumber_Delay = Converter.StringToUint(response_list_delay[0]);
+        uint _datetimeArrivalPredicted_Delay = Converter.StringToUint(response_list_delay[1]);
+        uint _minutesOfDelay = Converter.StringToUint(response_list_delay[2]);
         uint length_ticketlist = TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay].length;
 
         // Check by how many minutes the train has delayed
@@ -274,7 +149,7 @@ contract ChainlinkExample is ChainlinkClient {
                 owner_to_be_repaid.transfer(amount_to_be_repaid);
             }
 
-            emit TicketInfo("The tickets ")
+            emit TicketInfo("The tickets ");
 
         } else if (_minutesOfDelay > 60) {
             for (uint i=0; i < length_ticketlist; i++){
@@ -283,6 +158,7 @@ contract ChainlinkExample is ChainlinkClient {
                 uint amount_to_be_repaid = ((this_ticket.price * 60) / 100) - ((this_ticket.price * 60) % 100);
                 owner_to_be_repaid.transfer(amount_to_be_repaid);
             }
+
         } else if (_minutesOfDelay > 90) {
             for (uint i=0; i < length_ticketlist; i++){
                 Ticket memory this_ticket = TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i];
@@ -295,7 +171,7 @@ contract ChainlinkExample is ChainlinkClient {
         delete TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay];
 
         // Store the response_string inside a variable, after having transformed the bytes32 response into a string
-        response_string = bytes32ToString(_response);
+        response_string = Converter.bytes32ToString(_response);
     }
 
     // Function buyTicket enters into action when a call has been made to the webscraper. 
@@ -304,7 +180,7 @@ contract ChainlinkExample is ChainlinkClient {
     function buyTicket(bytes32 _requestId) public payable {
 
         // Instantiate the actual price from string to uint to allow comparison with the msg.value
-        uint actual_price = StringToUint(RequestToPrice[_requestId][4]);
+        uint actual_price = Converter.StringToUint(RequestToPrice[_requestId][4]);
 
         // We should potentially add a way in which we could transform the price from euro to ETH (or whichever value)
 
@@ -315,10 +191,10 @@ contract ChainlinkExample is ChainlinkClient {
         address payable _owner = msg.sender;
 
         string memory _stationDeparture = RequestToPrice[_requestId][0];
-        uint _datetimeArrivalPredicted = StringToUint(RequestToPrice[_requestId][1]);
+        uint _datetimeArrivalPredicted = Converter.StringToUint(RequestToPrice[_requestId][1]);
         string memory _stationArrival = RequestToPrice[_requestId][2];
-        uint _trainNumber = StringToUint(RequestToPrice[_requestId][3]);
-        uint _price = StringToUint(RequestToPrice[_requestId][4]);
+        uint _trainNumber = Converter.StringToUint(RequestToPrice[_requestId][3]);
+        uint _price = Converter.StringToUint(RequestToPrice[_requestId][4]);
 
         uint _datetimeDeparture = 14;
         
