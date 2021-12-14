@@ -251,20 +251,35 @@ contract ChainlinkExample is ChainlinkClient {
         uint _trainNumber_Delay = StringToUint(response_list_delay[0]);
         uint _datetimeArrivalPredicted_Delay = StringToUint(response_list_delay[1]);
         uint _minutesOfDelay = StringToUint(response_list_delay[2]);
+        uint length_ticketlist = TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay].length;
 
-        if (_minutesOfDelay > 60) {
-            uint length_ticketlist = TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay].length;
+        // Check by how many minutes the train has delayed
+        if (_minutesOfDelay > 10) {
             for (uint i=0; i < length_ticketlist; i++){
-                address payable owner_to_be_repaid = TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i].owner;
-                owner_to_be_repaid.transfer(address(this).balance);
+                Ticket memory this_ticket = TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i];
+                address payable owner_to_be_repaid = this_ticket.owner;
+                uint amount_to_be_repaid = ((this_ticket.price * 10) / 100) - ((this_ticket.price * 10) % 100);
+                owner_to_be_repaid.transfer(amount_to_be_repaid);
+            }
+        } else if (_minutesOfDelay > 60) {
+            for (uint i=0; i < length_ticketlist; i++){
+                Ticket memory this_ticket = TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i];
+                address payable owner_to_be_repaid = this_ticket.owner;
+                uint amount_to_be_repaid = ((this_ticket.price * 60) / 100) - ((this_ticket.price * 60) % 100);
+                owner_to_be_repaid.transfer(amount_to_be_repaid);
+            }
+        } else if (_minutesOfDelay > 90) {
+            for (uint i=0; i < length_ticketlist; i++){
+                Ticket memory this_ticket = TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i];
+                address payable owner_to_be_repaid = this_ticket.owner;
+                uint amount_to_be_repaid = ((this_ticket.price * 90) / 100) - ((this_ticket.price * 90) % 100);
+                owner_to_be_repaid.transfer(amount_to_be_repaid);
             }
         }
-        
-        
 
         // Store the response_string inside a variable, after having transformed the bytes32 response into a string
         response_string = bytes32ToString(_response);
-        }
+    }
 
     struct Ticket {
         address payable owner;
