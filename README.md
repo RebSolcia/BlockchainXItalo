@@ -5,25 +5,20 @@ This project is meant to help Italo improve their compensation process by making
 
 ## 1. The Webservice
 
-<img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Python.png" width="100">
-The webservice has been written using Python 3.9 as a language and the FastAPI package.
+<img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Python.png" width="20"> The webservice has been written using Python 3.9 as a language and the FastAPI package.
 
 See the [webservice code](https://github.com/RebSolcia/BlockchainXItalo/blob/main/code/webservice.py).
 
 
 ## 2. The Smart Contracts
 
-<img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Remix.png" width="100">
-The smart contracts have been written in Solidity and compiled using Remix, a web IDE.
+<img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Remix.png" width="20"> The smart contracts have been written in Solidity and compiled using Remix, a web IDE.
 
-<img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Kovan.png" width="100">
-The contract has been deployed using the Kovan testnet, and its Test ETH and Test LINK.
+<img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Kovan.png" width="20"> The contract has been deployed using the Kovan testnet, and its Test ETH and Test LINK.
 
-<img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Metamask.png" width="100">
-The Injected Web3 Provider used is Metamask.
+<img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Metamask.png" width="20"> The Injected Web3 Provider used is Metamask.
 
-<img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Chainlink.png" width="100">
-It has been possible to make API calls from the contract by using Chainlink.
+<img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Chainlink.png" width="20"> It has been possible to make API calls from the contract by using Chainlink.
 
 ### 2.1 The Library Utils smart contract
 See the [Library Utils contract](https://github.com/RebSolcia/BlockchainXItalo/blob/main/code/LibraryUtils.sol).
