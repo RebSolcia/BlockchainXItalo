@@ -139,19 +139,6 @@ contract ChainlinkExample is ChainlinkClient {
     function MySplit(string memory _base, string memory _value) public {
         stringaSplitted = split(_base, _value);
     }
-
-    //define state variables stored on the block chain
-    uint256 public currentPrice;
-    address public owner;
-    address public Oracle;
-    bytes32 public jobId;
-    uint256 public fee; 
-    bytes32 public bytesdirisposta;
-    string public response_string;
-    uint public counter = 0;
-    
-    // This mapping is made public so that for now we can debug and see whether tickets are added in the right way
-    mapping(bytes32 => string[]) public RequestToPrice;
     
     //constructor is run at the time of contract creating
     constructor() public {
@@ -167,6 +154,31 @@ contract ChainlinkExample is ChainlinkClient {
         require(msg.sender == owner);
         _;
     }
+
+    //define state variables stored on the block chain
+    uint256 public currentPrice;
+    address public owner;
+    address public Oracle;
+    bytes32 public jobId;
+    uint256 public fee; 
+    bytes32 public bytesdirisposta;
+    string public response_string;
+    uint public counter = 0;
+
+    struct Ticket {
+        address payable owner;
+        uint train_number;
+        uint price;
+        uint datetime_departure;
+        uint datetime_arrival_predicted;
+        string station_departure;
+        string station_arrival;
+    }
+
+    // This mapping is made public so that for now we can debug and see whether tickets are added in the right way
+    mapping(bytes32 => string[]) public RequestToPrice;
+    // This mapping stores tickets by train number and by predicted arrival time
+    mapping(uint => mapping(uint => Ticket[])) public TicketsByTrainNumberByDatetime;
 
     event TicketInfo (string successMessage);
     
@@ -277,21 +289,11 @@ contract ChainlinkExample is ChainlinkClient {
             }
         }
 
+        delete TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay];
+
         // Store the response_string inside a variable, after having transformed the bytes32 response into a string
         response_string = bytes32ToString(_response);
     }
-
-    struct Ticket {
-        address payable owner;
-        uint train_number;
-        uint price;
-        uint datetime_departure;
-        uint datetime_arrival_predicted;
-        string station_departure;
-        string station_arrival;
-    }
-
-    mapping(uint => mapping(uint => Ticket[])) public TicketsByTrainNumberByDatetime;
 
     // Function buyTicket enters into action when a call has been made to the webscraper. 
     // Remember there is a placeholder for a certain requestId inside the RequestToPrice mapping and here is where
