@@ -3,7 +3,7 @@ This project is meant to help Italo improve their compensation process by making
 
 
 
-<center><img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Ethereum.png" width="150">       for       <img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Italo.png" width="400"></center>
+<center><img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Ethereum.png" width="100">       for       <img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Italo.png" width="200"></center>
 
 
 <img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Remix.png" width="100">
