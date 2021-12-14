@@ -273,6 +273,9 @@ contract ChainlinkExample is ChainlinkClient {
                 uint amount_to_be_repaid = ((this_ticket.price * 10) / 100) - ((this_ticket.price * 10) % 100);
                 owner_to_be_repaid.transfer(amount_to_be_repaid);
             }
+
+            emit TicketInfo("The tickets ")
+
         } else if (_minutesOfDelay > 60) {
             for (uint i=0; i < length_ticketlist; i++){
                 Ticket memory this_ticket = TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i];
