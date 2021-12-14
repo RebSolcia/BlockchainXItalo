@@ -19,7 +19,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 
 # Change the following path
-ser = Service("/chromedriver.exe")
+ser = Service("../chromedriver.exe")
 
 import time
 import datetime
