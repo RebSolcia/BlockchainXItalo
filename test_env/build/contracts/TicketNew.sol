@@ -7,13 +7,6 @@ import "LibraryUtils.sol";
 //this Chainlink example inherits from ChainlinkClient
 
 contract ChainlinkExample is ChainlinkClient {
-
-    // TRIAL CODE FOR SPLITTING TO SEE WHETHER IT WORKS
-    string[] public stringaSplitted;
-
-    function MySplit(string memory _base, string memory _value) public {
-        stringaSplitted = Converter.split(_base, _value);
-    }
     
     //constructor is run at the time of contract creating
     constructor() public {
