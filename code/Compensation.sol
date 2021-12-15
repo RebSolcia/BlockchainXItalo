@@ -73,18 +73,21 @@ contract ItaloSellAndRefundService is ChainlinkClient {
     // given the train number and given the predicted datetime of arrival 
     mapping(uint => mapping(uint => Ticket[])) public TicketsByTrainNumberByDatetime;
 
+    // DelayAsked ensures that the compensation has not been asked for a certain train at a certain threshold of delay
+    mapping(uint => mapping(uint => string)) public CompensationAsked;
+
     //
     // EVENTS
     //
 
     // TicketInfo emits a string related to the purchase of the ticket
     event TicketInfo (string successMessage);
-    
+
     //
     // FUNCTIONS
     //
 
-    // requestInfo: a function that is called to search for the ticket you want and store 
+    // requestInfo: a function that is called to search for the ticket you want and store
     // your claim for that ticket inside of the database
     function requestInfo(string memory _stationDeparture, string memory _stationArrival,
                          string memory _trainNumber, string memory _datetimeDeparture,
@@ -93,15 +96,15 @@ contract ItaloSellAndRefundService is ChainlinkClient {
         // A request variable is created, following the fulfill function below
         Chainlink.Request memory request = buildChainlinkRequest(jobId, address(this), this.fulfill.selector);
 
-        // Set the url to perform the GET request so that the request is built adaptively, 
+        // Set the url to perform the GET request so that the request is built adaptively,
         // given the parameters that are fed to the requestInfo function
-        string memory query = string(abi.encodePacked("https://455b-2001-b07-a3c-400a-b561-bc22-61b9-a720.ngrok.io", 
-                                                      "/fake_ticket_search/?", 
-                                                      "departure_station=", _stationDeparture, 
-                                                      "&arrival_station=", _stationArrival, 
+        string memory query = string(abi.encodePacked("https://455b-2001-b07-a3c-400a-b561-bc22-61b9-a720.ngrok.io",
+                                                      "/fake_ticket_search/?",
+                                                      "departure_station=", _stationDeparture,
+                                                      "&arrival_station=", _stationArrival,
                                                       "&train_number=", _trainNumber,
-                                                      "&time_of_departure=", _datetimeDeparture, 
-                                                      "&time_of_arrival=", _datetimeArrivalPredicted, 
+                                                      "&time_of_departure=", _datetimeDeparture,
+                                                      "&time_of_arrival=", _datetimeArrivalPredicted,
                                                       "&price=", _price));
         request.add("get", query);
 
@@ -117,7 +120,7 @@ contract ItaloSellAndRefundService is ChainlinkClient {
         // Send the request
         return sendChainlinkRequestTo(Oracle, request, fee);
     }
-    
+
     // fulfill: function that actually fulfills the request forwarded by the requestInfo function.
     // You do not have to interact with it! These inputs are going to be fed by the requestInfo function itself.
     function fulfill(bytes32 _requestId, bytes32 _response) public recordChainlinkFulfillment(_requestId) {
@@ -130,10 +133,10 @@ contract ItaloSellAndRefundService is ChainlinkClient {
         // Store the response_string inside a variable, after having transformed the bytes32 response into a string
         string memory response_string_info = Converter.bytes32ToString(_response);
 
-        // Split the string response_string based on underscores, so that you can index the response inside 
+        // Split the string response_string based on underscores, so that you can index the response inside
         // the RequestToPrice mapping
         string[] memory response_list_info = Converter.split(response_string_info, "_");
-        
+
         // Store, under the given counter_key (which is the keccak-encoded version of the counter),
         // the response string you get from the call
         RequestToPrice[counter_key] = response_list_info;
@@ -146,7 +149,7 @@ contract ItaloSellAndRefundService is ChainlinkClient {
     }
 
     // buyTicket: uses the keccak-encoded version of the counter to retrieve a certain ticket for a user and let her
-    // pay for it and buy it. The msg.value when calling the buyTicket function must be greater or equal than the 
+    // pay for it and buy it. The msg.value when calling the buyTicket function must be greater or equal than the
     // price that you have retrieved previously by querying the RequestToPrice mapping, otherwise the transaction
     // gets reverted.
     function buyTicket(bytes32 _requestId) public payable {
@@ -166,8 +169,8 @@ contract ItaloSellAndRefundService is ChainlinkClient {
         string memory _stationArrival = RequestToPrice[_requestId][2];
         uint _trainNumber = Converter.StringToUint(RequestToPrice[_requestId][3]);
         uint _price = Converter.StringToUint(RequestToPrice[_requestId][4])*10000000000000000;
-        
-        // Emit an event telling the user in which case he's supposed to ask for a refund 
+
+        // Emit an event telling the user in which case he's supposed to ask for a refund
         emit TicketInfo(string(abi.encodePacked("You have successfully bought your ticket from ", _stationDeparture, " to ", _stationArrival, ". The train ", RequestToPrice[_requestId][3] ," is scheduled to arrive at ", RequestToPrice[_requestId][1], ". Make sure to ask for a refund in case of delay! Thanks for choosing our service")));
 
         // Push the Ticket inside the Ticket array, given train number and given the datetime
@@ -176,6 +179,12 @@ contract ItaloSellAndRefundService is ChainlinkClient {
         // Remove the RequestId from the RequestToPrice mapping to avoid storing useless stuff, as the
         // ticket at this point has already been paid for
         delete RequestToPrice[_requestId];
+
+        // Initialize the Delay array
+        CompensationAsked[_trainNumber][30] = "False";
+        CompensationAsked[_trainNumber][60] = "False";
+        CompensationAsked[_trainNumber][90] = "False";
+        CompensationAsked[_trainNumber][300] = "False";
     }
 
 
@@ -183,7 +192,7 @@ contract ItaloSellAndRefundService is ChainlinkClient {
     // with respect to its predicted datetime of arrival
     function checkDelay(string memory _trainNumber, string memory _expectedArr,
                         string memory _delay, string memory _thr) public returns (bytes32 requestId) {
-        
+
         // Check first whether the train has delayed of at least 20 mintues, otherwise it does not make
         // sense to go through all of the array iteration.
         uint _datetimeArrivalPredicted_Bytes = Converter.StringToUint(_expectedArr);
@@ -192,10 +201,10 @@ contract ItaloSellAndRefundService is ChainlinkClient {
         // A request variable is created, following the fulfill_delay function below
         Chainlink.Request memory request = buildChainlinkRequest(jobId, address(this), this.fulfill_delay.selector);
 
-        // Set the url to perform the GET request so that the request is built adaptively, 
+        // Set the url to perform the GET request so that the request is built adaptively,
         // given the parameters that are fed to the requestInfo function
-        string memory query = string(abi.encodePacked("https://455b-2001-b07-a3c-400a-b561-bc22-61b9-a720.ngrok.io", 
-                                                      "/fake_delay/?", 
+        string memory query = string(abi.encodePacked("https://455b-2001-b07-a3c-400a-b561-bc22-61b9-a720.ngrok.io",
+                                                      "/fake_delay/?",
                                                       "train_number=", _trainNumber,
                                                       "&expected_arr=", _expectedArr,
                                                       "&delay=", _delay,
@@ -207,8 +216,9 @@ contract ItaloSellAndRefundService is ChainlinkClient {
 
         // Send the request
         return sendChainlinkRequestTo(Oracle, request, fee);
+
     }
-    
+
     // fulfill_delay: function that actually fulfills the request forwarded by the requestInfo function.
     // You do not have to interact with it! These inputs are going to be fed by the requestInfo function itself.
     function fulfill_delay(bytes32 _requestId, bytes32 _response) public recordChainlinkFulfillment(_requestId) {
@@ -216,11 +226,11 @@ contract ItaloSellAndRefundService is ChainlinkClient {
         // Store the response_string inside a variable, after having transformed the bytes32 response into a string
         string memory response_string_delay = Converter.bytes32ToString(_response);
 
-        // Split the string response_string based on underscores, so that it is possible to parse it and 
+        // Split the string response_string based on underscores, so that it is possible to parse it and
         // use the response variables to perform the further analysis for refunding
         string[] memory response_list_delay = Converter.split(response_string_delay, "_");
 
-        // Create a number of different local variables to be used to get the refund 
+        // Create a number of different local variables to be used to get the refund
         string memory boolean = response_list_delay[0];
         uint _trainNumber_Delay = Converter.StringToUint(response_list_delay[1]);
         uint _datetimeArrivalPredicted_Delay = Converter.StringToUint(response_list_delay[2]);
@@ -231,8 +241,8 @@ contract ItaloSellAndRefundService is ChainlinkClient {
         if (keccak256(abi.encodePacked(boolean))==keccak256(abi.encodePacked("True"))) {
 
             // If the train has delayed by more than 30 minutes and less than 60 minutes, you will get a refund of 30%
-            if ((30 <= _minutesOfDelay) && (_minutesOfDelay < 60)) {
-
+            if ((30 <= _minutesOfDelay) && (_minutesOfDelay < 60) &&
+                (keccak256(abi.encodePacked(CompensationAsked[_trainNumber_Delay][30])) == keccak256(abi.encodePacked("False")))) {
                 // Iterate through all of the ticket list, given the train number and the predicted arrival keys
                 for (uint i=0; i < length_ticketlist; i++){
                     // Get the ticket indexed by i
@@ -242,19 +252,23 @@ contract ItaloSellAndRefundService is ChainlinkClient {
                     // Calculate the amount of be repaid as a percentage of the price of the ticket indexed by i
                     uint amount_to_be_repaid = ((this_ticket.price * 30) / 100) - ((this_ticket.price * 30) % 100);
                     // Transfer such amount to the owner of the ticket
-                    owner_to_be_repaid.transfer(amount_to_be_repaid);                
+                    owner_to_be_repaid.transfer(amount_to_be_repaid);
                     // Decrease the price of the ticket by the amount that has been already refunded
                     TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i].price -= amount_to_be_repaid;
                 }
-            } else if ((60 <= _minutesOfDelay) && (_minutesOfDelay < 90)) {
+                CompensationAsked[_trainNumber_Delay][30] = "True";
+            } else if ((60 <= _minutesOfDelay) && (_minutesOfDelay < 90) &&
+                    (keccak256(abi.encodePacked(CompensationAsked[_trainNumber_Delay][60])) == keccak256(abi.encodePacked("False")))) {
                 for (uint i=0; i < length_ticketlist; i++){
                     Ticket memory this_ticket = TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i];
                     address payable owner_to_be_repaid = this_ticket.owner;
                     uint amount_to_be_repaid = ((this_ticket.price * 60) / 100) - ((this_ticket.price * 60) % 100);
-                    owner_to_be_repaid.transfer(amount_to_be_repaid);         
+                    owner_to_be_repaid.transfer(amount_to_be_repaid);
                     TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i].price -= amount_to_be_repaid;
                 }
-            } else if ((90 <= _minutesOfDelay) && (_minutesOfDelay < 120)) {
+                CompensationAsked[_trainNumber_Delay][60] = "True";
+            } else if ((90 <= _minutesOfDelay) && (_minutesOfDelay < 120) &&
+                    (keccak256(abi.encodePacked(CompensationAsked[_trainNumber_Delay][90])) == keccak256(abi.encodePacked("False")))) {
                 for (uint i=0; i < length_ticketlist; i++){
                     Ticket memory this_ticket = TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i];
                     address payable owner_to_be_repaid = this_ticket.owner;
@@ -262,11 +276,13 @@ contract ItaloSellAndRefundService is ChainlinkClient {
                     owner_to_be_repaid.transfer(amount_to_be_repaid);
                     TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i].price -= amount_to_be_repaid;
                 }
-            } else if (_minutesOfDelay > 300) {
+                CompensationAsked[_trainNumber_Delay][90] = "True";
+            } else if ((_minutesOfDelay > 300) && (keccak256(abi.encodePacked(CompensationAsked[_trainNumber_Delay][300])) == keccak256(abi.encodePacked("False")))) {
                 // If the train has delayed by more than 300 minutes, then it is not possible to claim for
                 // further refunding and the train tickets indexed by a certain train number and a certain arrival predicted
                 // are just deleted, to save up some space
                 delete TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay];
+                CompensationAsked[_trainNumber_Delay][300] = "True";
             }
         }
     }
