@@ -73,6 +73,9 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
     // given the train number and given the predicted datetime of arrival 
     mapping(uint => mapping(uint => Ticket[])) public TicketsByTrainNumberByDatetime;
 
+    // DelayAsked ensures that the compensation has not been asked for a certain train at a certain threshold of delay
+    mapping(uint => mapping(uint => string)) public CompensationAsked;
+
     //
     // EVENTS
     //
@@ -172,6 +175,12 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
         // Remove the RequestId from the RequestToPrice mapping to avoid storing useless stuff, as the
         // ticket at this point has already been paid for
         delete RequestToPrice[_requestId];
+
+        // Initialize the Delay array
+        CompensationAsked[_trainNumber][30] = "False";
+        CompensationAsked[_trainNumber][60] = "False";
+        CompensationAsked[_trainNumber][90] = "False";
+        CompensationAsked[_trainNumber][300] = "False";
     }
 
 
@@ -201,7 +210,7 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
         // Send the request
         return sendChainlinkRequestTo(Oracle, request, fee);
     }
-    
+
     // fulfill_delay: function that actually fulfills the request forwarded by the requestInfo function.
     // You do not have to interact with it! These inputs are going to be fed by the requestInfo function itself.
     function fulfill_delay(bytes32 _requestId, bytes32 _response) public recordChainlinkFulfillment(_requestId) {
@@ -209,11 +218,11 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
         // Store the response_string inside a variable, after having transformed the bytes32 response into a string
         string memory response_string_delay = Converter.bytes32ToString(_response);
 
-        // Split the string response_string based on underscores, so that it is possible to parse it and 
+        // Split the string response_string based on underscores, so that it is possible to parse it and
         // use the response variables to perform the further analysis for refunding
         string[] memory response_list_delay = Converter.split(response_string_delay, "_");
 
-        // Create a number of different local variables to be used to get the refund 
+        // Create a number of different local variables to be used to get the refund
         string memory boolean = response_list_delay[0];
         uint _trainNumber_Delay = Converter.StringToUint(response_list_delay[1]);
         uint _datetimeArrivalPredicted_Delay = Converter.StringToUint(response_list_delay[2]);
@@ -224,8 +233,8 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
         if (keccak256(abi.encodePacked(boolean))==keccak256(abi.encodePacked("True"))) {
 
             // If the train has delayed by more than 30 minutes and less than 60 minutes, you will get a refund of 30%
-            if ((30 <= _minutesOfDelay) && (_minutesOfDelay < 60)) {
-
+            if ((30 <= _minutesOfDelay) && (_minutesOfDelay < 60) &&
+                (keccak256(abi.encodePacked(CompensationAsked[_trainNumber_Delay][30])) == keccak256(abi.encodePacked("False")))) {
                 // Iterate through all of the ticket list, given the train number and the predicted arrival keys
                 for (uint i=0; i < length_ticketlist; i++){
                     // Get the ticket indexed by i
@@ -235,19 +244,23 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
                     // Calculate the amount of be repaid as a percentage of the price of the ticket indexed by i
                     uint amount_to_be_repaid = ((this_ticket.price * 30) / 100) - ((this_ticket.price * 30) % 100);
                     // Transfer such amount to the owner of the ticket
-                    owner_to_be_repaid.transfer(amount_to_be_repaid);                
+                    owner_to_be_repaid.transfer(amount_to_be_repaid);
                     // Decrease the price of the ticket by the amount that has been already refunded
                     TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i].price -= amount_to_be_repaid;
                 }
-            } else if ((60 <= _minutesOfDelay) && (_minutesOfDelay < 90)) {
+                CompensationAsked[_trainNumber_Delay][30] = "True";
+            } else if ((60 <= _minutesOfDelay) && (_minutesOfDelay < 90) &&
+                    (keccak256(abi.encodePacked(CompensationAsked[_trainNumber_Delay][60])) == keccak256(abi.encodePacked("False")))) {
                 for (uint i=0; i < length_ticketlist; i++){
                     Ticket memory this_ticket = TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i];
                     address payable owner_to_be_repaid = this_ticket.owner;
                     uint amount_to_be_repaid = ((this_ticket.price * 60) / 100) - ((this_ticket.price * 60) % 100);
-                    owner_to_be_repaid.transfer(amount_to_be_repaid);         
+                    owner_to_be_repaid.transfer(amount_to_be_repaid);
                     TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i].price -= amount_to_be_repaid;
                 }
-            } else if ((90 <= _minutesOfDelay) && (_minutesOfDelay < 120)) {
+                CompensationAsked[_trainNumber_Delay][60] = "True";
+            } else if ((90 <= _minutesOfDelay) && (_minutesOfDelay < 120) &&
+                    (keccak256(abi.encodePacked(CompensationAsked[_trainNumber_Delay][90])) == keccak256(abi.encodePacked("False")))) {
                 for (uint i=0; i < length_ticketlist; i++){
                     Ticket memory this_ticket = TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i];
                     address payable owner_to_be_repaid = this_ticket.owner;
@@ -255,11 +268,13 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
                     owner_to_be_repaid.transfer(amount_to_be_repaid);
                     TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i].price -= amount_to_be_repaid;
                 }
-            } else if (_minutesOfDelay > 300) {
+                CompensationAsked[_trainNumber_Delay][90] = "True";
+            } else if ((_minutesOfDelay > 300) && (keccak256(abi.encodePacked(CompensationAsked[_trainNumber_Delay][300])) == keccak256(abi.encodePacked("False")))) {
                 // If the train has delayed by more than 300 minutes, then it is not possible to claim for
                 // further refunding and the train tickets indexed by a certain train number and a certain arrival predicted
                 // are just deleted, to save up some space
                 delete TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay];
+                CompensationAsked[_trainNumber_Delay][300] = "True";
             }
         }
     }
