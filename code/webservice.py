@@ -183,10 +183,69 @@ async def search_ticket(
     train_number = driver.find_element_by_xpath(
         f'/html/body/main/section[3]/div[3]/div[2]/table/tbody/tr[{choice}]/td[4]/p[2]').get_attribute("innerText")
     
+    # Encoding Stations
+    stations ={
+    "Milano Centrale": "MIL",
+    "Roma Termini":"ROM",
+    "Napoli Centrale":"NAP",
+    "Torino Porta Nuova":"TOR",
+    "Firenze S.M.Novella":"FIR",
+    "Bologna Centrale":"BOL",
+    "Agropoli":"AGR",
+    "Bari Centrale":"BAR",
+    "Barletta":"BRL",
+    "Benevento":"BNV",
+    "Bergamo":"BRG",
+    "Bisceglie":"BSC",
+    "Bolzano":"BZN",
+    "Brescia":"BRS",
+    "Caserta":"CAS",
+    "Conegliano":"CON",
+    "Desenzano":"DES",
+    "Ferrara":"FER",
+    "Foggia":"FOG",
+    "Genova Brignole":"GBR",
+    "Genova Piazza Principe":"GPP",
+    "Lamezia Terme C":"LTC",
+    "Latisana-Lignano-Bib":"LTB",
+    "Maratea":"MRT",
+    "Milano Rho Fiera":"MRF",
+    "Milano Rogoredo":"MLR",
+    "Molfetta":"MLF",
+    "Monfalcone":"MNF",
+    "Napoli Afragola":"NPA",
+    "Padova":"PDV",
+    "Paola":"PAO",
+    "Peschiera":"PES",
+    "Pordenone":"PRN",
+    "Portogruaro-Caorle":"PGC",
+    "Reggio Calabria":"RGC",
+    "Reggio Emilia AV":"REA",
+    "Roma Tiburtina":"RMT",
+    "Rosarno":"ROS",
+    "Rovereto":"RVR",
+    "Rovigo":"RVG",
+    "Salerno":"SLR",
+    "Sapri":"SPR",
+    "Scalea":"SCL",
+    "Torino Porta Susa":"TPS",
+    "Trani":"TRA",
+    "Trento":"TRN",
+    "Treviso Centrale":"TRV",
+    "Trieste Centrale":"TRI",
+    "Udine":"UDI",
+    "Vallo d. Lucania":"VDL",
+    "Venezia Mestre":"VZM",
+    "Venezia S.Lucia":"VSL",
+    "Verona Porta Nuova":"VPN",
+    "Vibo-Pizzo":"VBP",
+    "Vicenza":"VIC",
+    "Villa S.Giovanni":"VSG",
+    }
+
     # Shorten departure station and arrival station for output
-    departure_station_new = departure_station[:2]
-    arrival_station_new = arrival_station[:2]
-    
+    departure_station_new = stations[departure_station]
+    arrival_station_new = stations[arrival_station]
     # Choose random price between 50 and 100 since retrieving real price would have resulted in chainlink timeout due to slow loading response time of website
     price = np.random.randint(50, 100)
     
