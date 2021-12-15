@@ -10,6 +10,27 @@ This project is meant to help Italo improve their compensation process by making
 See the [webservice code](https://github.com/RebSolcia/BlockchainXItalo/blob/main/code/webservice.py).
 
 
+### 1.1 The Webservice Functions
+The webservice contains functions that can be called by using API calls. Those functions are crucial to retrieve information needed to book Italo's tickets and to check for delay of trains.
+
+The main functions are:
+* **search_ticket(departure_station, arrival_station, departure_hour=0)** that scrapes Italo's website in order to retrieve the train number and the time of departure and arrival of the first train departing after the *departure_hour* (which should be a value between 0 and 24) and going from *departure_station* to *arrival_station*. Specifically, the chosen solution will be referred to the day after the function is called and the price of the corresponding ticket will be generated as a random integer between 50 and 100.
+This function returns a json that includes a string containing all the meaningful data separated by *"_"*: an encoded version of the name of the two stations, the unix timestamp of arrival, the train number and the price.
+An illustrative output is the following:
+```
+{"response": "MIL_1639610340_ROM_9963_89"}
+```
+* **check_delay(train_number, expected_arr)** that scrapes Italo's website to check the status of a train in real time. *expected_arr* is the expected time of arrival and must be inputted as a unix timestamp. The peculiarity of this function is that it must be called before the train arrives at the final station because otherwise the information about the delay will not be available anymore on Italo's website.
+This function returns a json that includes a string containing all the meaningful data separated by *"_"*: True or False based on whether the train delay has exceeded the threshold or not, train number, *expected_arr* and minutes of delay.
+An illustrative output is the following:
+```
+{"response": "True_9963_1639610340_65"}
+```
+
+The webservice also contains two functions that simulate the response of the two functions above, respectively, resulting in the same kind of output without the need of scraping Italo's website:
+* **fake_ticket_search(departure_station, arrival_station, train_number, time_of_departure, time_of_arrival, price)**. Here, every piece of information about the ticket can be chosen by the user. In particular, time_of_departure and time_of_arrival must be inputted in the format hh:mm and the price must display the cents as well (e.g. 59.00).
+* **fake_delay(train_number, expected_arr, delay, thr)**. Here, both the minutes of delay and the threshold for the delay can be chosen by the user.
+
 ## 2. The Smart Contracts
 
 <img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Remix.png" width="20"> The smart contracts have been written in Solidity and compiled using Remix, a web IDE.
