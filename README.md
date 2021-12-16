@@ -1,7 +1,13 @@
 # BlockchainXItalo
 <p align="center"><img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Ethereum.png" width="80"> <img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/For.png" width="40"> <img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Italo.png" width="180"/></p>
 
-This project is meant to help Italo improve their compensation process by making use of blockchain technologies, especially smart contracts.
+This project is meant to help Italo improve their compensation process by making use of blockchain technologies, especially smart contracts. The goal is to leverage innovative functionalities to guarantee refunds in case of train delays. The current policy of the company covers a percentage of the price paid for the ticket in case of delays greater than 60 minutes. However, the refund is not automatic. Specifically, you need to 
+1. Log into your Italo account
+2. Ask for a voucher
+3. Fill the appropriate form
+4. Wait to receive the monetary equivalent on Italo's wallet
+
+In order to make this process faster and smoother, a smart contract was constructed. In particular, this project provides a compensation scheme that allows to make a claim for a ticket, buy it and then ask for a refund proportionally to the initial payment and to the amount of delay. The compensation is not left to the user but it is implemented automatically.
 
 ## 1. The Webservice
 
@@ -54,7 +60,7 @@ The most crucial functions contained inside of the Converter library belonging t
 These functions proved extremely useful when converting data types to be able to handle all of the logic behind the contract. 
 
 ### 2.2 The Compensation smart contract
-The Compensation smart contract is a Solidity contract in which, once deployed, any agent can claim for a ticket, buy a ticket and then ask for a refunding (see the [Compensation contract](https://github.com/RebSolcia/BlockchainXItalo/blob/main/code/TicketNew.sol)).
+The Compensation smart contract is a Solidity contract in which, once deployed, any agent can claim for a ticket, buy a ticket and then ask for a refund (see the [Compensation contract](https://github.com/RebSolcia/BlockchainXItalo/blob/main/code/TicketNew.sol)).
 
 The most important functions inside of this contract are (in logical order):
 * **requestInfo(_stationDeparture, stationArrival, datetimeDeparture etc_)** that, given information over a train ticket sends an API call to our webservice to look for the most suitable solution inside of the Italo webservice. This function also stores a claim for such ticket inside of the RequestToPrice mapping. After having called the function, the customer who has called it is given a _counter number_ (which is equivalent to a personal key) that must be converted to then further interact with the contract in an encrypted way.
