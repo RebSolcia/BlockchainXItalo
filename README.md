@@ -11,7 +11,7 @@ In order to make this process faster and smoother, a smart contract was construc
 
 The reason why we decided to implement a solution for Italo is because we strongly believe that transparency is an important trait every company should display when dealing with its customers and, above all, with their money. 
 Making use of a blockchain process when an SQL database and some additional automation could have done the same is because, on chain, transactions are extremely more transparent. 
-The interactiions with a smart contract are of algorithmic nature: no human being involved and full display of the code ensure that the customer knows perfectly when he will be repaid and upon which (objective) conditions. 
+The interactions with a smart contract are of algorithmic nature: no human being involved and full display of the code ensure that the customer knows perfectly when he will be repaid and upon which (objective) conditions. 
 Finally, the implementation of a blockchain solution for Italo's refunding process allows one of the most important Italian train companies to make use of tools at the cutting edge of technology and therefore show to be able to embrace change and innovation. 
 
 ## 1. The Webservice
