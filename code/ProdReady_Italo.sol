@@ -281,7 +281,7 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
 
     function ItaloWithdrawal(uint amount) onlyOwner public returns (bool) {
         require(amount < address(this).balance);
-        owner.transfer(amount);
+        msg.sender.transfer(amount);
         return true;
     }
 }
