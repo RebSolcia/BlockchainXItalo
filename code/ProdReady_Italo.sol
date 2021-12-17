@@ -269,14 +269,17 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
                     TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i].price -= amount_to_be_repaid;
                 }
                 CompensationAsked[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][90] = "True";
-            } else if ((_minutesOfDelay > 300) && (keccak256(abi.encodePacked(CompensationAsked[_trainNumber_Delay][300])) == keccak256(abi.encodePacked("False")))) {
+            } else if ((_minutesOfDelay > 300) && (keccak256(abi.encodePacked(CompensationAsked[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][300])) == keccak256(abi.encodePacked("False")))) {
                 // If the train has delayed by more than 300 minutes, then it is not possible to claim for
                 // further refunding and the train tickets indexed by a certain train number and a certain arrival predicted
                 // are just deleted, to save up some space
                 delete TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay];
                 CompensationAsked[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][300] = "True";
                 // Delete the refunding mapping because it wouldn't make sense to have it there
-                delete CompensationAsked[_trainNumber_Delay][_datetimeArrivalPredicted_Delay];
+                delete CompensationAsked[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][30];
+                delete CompensationAsked[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][60];
+                delete CompensationAsked[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][90];
+                delete CompensationAsked[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][300];
             }
         }
     }
