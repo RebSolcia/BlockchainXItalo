@@ -1,7 +1,7 @@
 # BlockchainXItalo
 <p align="center"><img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Ethereum.png" width="80"> <img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/For.png" width="40"> <img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Italo.png" width="180"/></p>
 
-This project is meant to help Italo improve their compensation process by making use of blockchain technologies, especially smart contracts. The goal is to leverage innovative functionalities to guarantee refunds in case of train delays. The current policy of the company covers a percentage of the price paid for the ticket in case of delays greater than 60 minutes. However, the refund is not automatic. Specifically, you need to 
+This project is meant to help Italo improve their compensation process by making use of blockchain technologies, especially smart contracts. The goal is to leverage innovative functionalities to guarantee refunds in case of train delays. The current policy of the company covers a percentage of the price paid for the ticket in case of delays greater than 30 minutes. However, the refund is not automatic. Specifically, you need to 
 1. Log into your Italo account
 2. Ask for a voucher
 3. Fill the appropriate form
