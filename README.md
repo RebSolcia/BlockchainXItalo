@@ -9,6 +9,11 @@ This project is meant to help Italo improve their compensation process by making
 
 In order to make this process faster and smoother, a smart contract was constructed. In particular, this project provides a compensation scheme that allows to make a claim for a ticket, buy it and then ask for a refund proportionally to the initial payment and to the amount of delay. The compensation is not left to the user but it is implemented automatically.
 
+The reason why we decided to implement a solution for Italo is because we strongly believe that transparency is an important trait every company should display when dealing with its customers and, above all, with their money. 
+Making use of a blockchain process when an SQL database and some additional automation could have done the same is because, on chain, transactions are extremely more transparent. 
+The interactiions with a smart contract are of algorithmic nature: no human being involved and full display of the code ensure that the customer knows perfectly when he will be repaid and upon which (objective) conditions. 
+Finally, the implementation of a blockchain solution for Italo's refunding process allows one of the most important Italian train companies to make use of tools at the cutting edge of technology and therefore show to be able to embrace change and innovation. 
+
 ## 1. The Webservice
 
 <img src="https://github.com/RebSolcia/BlockchainXItalo/blob/main/README_pics/Python.png" width="20"> The webservice has been written using Python 3.9 as a language and the FastAPI package.
@@ -68,25 +73,3 @@ The most important functions inside of this contract are (in logical order):
 * **buyTicket(_requestId_)** is the function in which, after having made a claim for the ticket, the user must pay the required price of that ticket. If she pays too much, then the call is reverted. If it pays the right amount, the function uses the information inside of the RequestToPrice mapping to store the ticket info inside of a mapping called TicketsByTrainNumberByDatetime that, given a train number and a predicted datetime of arrival contains a list of the tickets belonging to the passengers inside that specific train. The function emits the relevant data for the passenger to, in case, ask for a claim (_trainNumber_ and _scheduledDatetimeArrival_) and then trashes the ticket claim inside of the RequestToPrice mapping, to save up some space.
 * **checkDelay(_trainNumber, scheduledDatetimeArrival_)** calls our webservice to check whether a certain train has delayed. It also automatically refunds everyone whose train has delayed, proportionally to her initial payment and to the amount of delay. The function can be called one time for each "delay threshold" and can be called just when it has delayed of at least 20 minutes.
 
-# HOW TO (TEST) - Run the code, step by step
-## Step 0 - Before Running
-
-## Step 1 - Deploy the contract in Remix
-
-## Step 2 - Book a ticket
-
-## Step 3 - Buy a ticket
-
-## Step 4 - Ask for a refund
-
-
-# HOW TO (PROD) - Run the code, step by step
-## Step 0 - Before Running
-
-## Step 1 - Deploy the contract in Remix
-
-## Step 2 - Book a ticket
-
-## Step 3 - Buy a ticket
-
-## Step 4 - Ask for a refund
