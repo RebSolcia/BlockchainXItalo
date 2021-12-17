@@ -92,8 +92,7 @@ async def validation_exception_handler(
     summary="Search for Tickets",
     description="Main method to search for tickets on Italo's website."
 )
-
-# Defininig search_ticket function which simulates the purchasing of a ticket through scraping Italo's website 
+# Defininig search_ticket function which simulates the purchasing of a ticket through scraping Italo's website
 async def search_ticket(
         request: Request,
 
@@ -111,17 +110,17 @@ async def search_ticket(
         ),
 ):
     # Scrape Italo's website to get first available train after the specified hour
-    train_URL = 'https://www.italotreno.it/en/destinations-timetable/trains-schedules' 
+    train_URL = 'https://www.italotreno.it/en/destinations-timetable/trains-schedules'
 
     # Start webdriver on Italo's Website
-    options = webdriver.ChromeOptions() 
+    options = webdriver.ChromeOptions()
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('useAutomationExtension', False)
 
     driver = webdriver.Chrome(service=ser,
                               options=options)  # or webdriver.Chrome(executable_path=local_path_of_driver, options=options)
     driver.get(train_URL)
-    
+
     # Input requested departure station and arrival station
     search_box_from = driver.find_element_by_xpath(
         '/html/body/main/section[3]/div[2]/form/div[1]/div/table/tbody/tr[1]/td[1]/fieldset/div/input[1]').send_keys(
@@ -129,13 +128,13 @@ async def search_ticket(
     search_box_to = driver.find_element_by_xpath(
         '/html/body/main/section[3]/div[2]/form/div[1]/div/table/tbody/tr[1]/td[3]/fieldset/div/input[1]').send_keys(
         arrival_station)
-    
+
     # Search for train connections
     button = driver.find_element_by_xpath(
         '/html/body/main/section[3]/div[2]/form/div[1]/div/table/tbody/tr[1]/td[4]/div/a')
     webdriver.ActionChains(driver).click_and_hold(button).perform()
     driver.execute_script("arguments[0].click();", button)
-    
+
     # Wait for page to be loaded
     try:
         element_present = EC.presence_of_element_located(
@@ -147,7 +146,7 @@ async def search_ticket(
     num_options = len(driver.find_elements_by_xpath("/html/body/main/section[3]/div[3]/div[2]/table/tbody/tr"))
     if num_options == 0:
         return f"Sorry, no routes available from {departure_station} to {arrival_station}"
-    
+
     # Choose best train connection depending on requested time
     timing = []
     departure_hour = str(departure_hour) + "00"
@@ -165,7 +164,7 @@ async def search_ticket(
 
     x = 0
     choice = timing[x][0]
-    
+
     # Converting time of departure and time of arrival of connection to unix format
     time_of_departure, time_of_arrival = timing[x][1:]
     today = datetime.date.today()
@@ -178,77 +177,78 @@ async def search_ticket(
     datetime_arr = datetime.datetime(today.year, today.month, day_arr, int(time_of_arrival.split(":")[0]),
                                      int(time_of_arrival.split(":")[1]))
     unix_arrival = round(time.mktime(datetime_arr.timetuple()))
-    
+
     # Retrieve train number
     train_number = driver.find_element_by_xpath(
         f'/html/body/main/section[3]/div[3]/div[2]/table/tbody/tr[{choice}]/td[4]/p[2]').get_attribute("innerText")
-    
+
     # Encoding Stations
-    stations ={
-    "Milano Centrale": "MIL",
-    "Roma Termini":"ROM",
-    "Napoli Centrale":"NAP",
-    "Torino Porta Nuova":"TOR",
-    "Firenze S.M.Novella":"FIR",
-    "Bologna Centrale":"BOL",
-    "Agropoli":"AGR",
-    "Bari Centrale":"BAR",
-    "Barletta":"BRL",
-    "Benevento":"BNV",
-    "Bergamo":"BRG",
-    "Bisceglie":"BSC",
-    "Bolzano":"BZN",
-    "Brescia":"BRS",
-    "Caserta":"CAS",
-    "Conegliano":"CON",
-    "Desenzano":"DES",
-    "Ferrara":"FER",
-    "Foggia":"FOG",
-    "Genova Brignole":"GBR",
-    "Genova Piazza Principe":"GPP",
-    "Lamezia Terme C":"LTC",
-    "Latisana-Lignano-Bib":"LTB",
-    "Maratea":"MRT",
-    "Milano Rho Fiera":"MRF",
-    "Milano Rogoredo":"MLR",
-    "Molfetta":"MLF",
-    "Monfalcone":"MNF",
-    "Napoli Afragola":"NPA",
-    "Padova":"PDV",
-    "Paola":"PAO",
-    "Peschiera":"PES",
-    "Pordenone":"PRN",
-    "Portogruaro-Caorle":"PGC",
-    "Reggio Calabria":"RGC",
-    "Reggio Emilia AV":"REA",
-    "Roma Tiburtina":"RMT",
-    "Rosarno":"ROS",
-    "Rovereto":"RVR",
-    "Rovigo":"RVG",
-    "Salerno":"SLR",
-    "Sapri":"SPR",
-    "Scalea":"SCL",
-    "Torino Porta Susa":"TPS",
-    "Trani":"TRA",
-    "Trento":"TRN",
-    "Treviso Centrale":"TRV",
-    "Trieste Centrale":"TRI",
-    "Udine":"UDI",
-    "Vallo d. Lucania":"VDL",
-    "Venezia Mestre":"VZM",
-    "Venezia S.Lucia":"VSL",
-    "Verona Porta Nuova":"VPN",
-    "Vibo-Pizzo":"VBP",
-    "Vicenza":"VIC",
-    "Villa S.Giovanni":"VSG",
+    stations = {
+        "Milano Centrale": "MIL",
+        "Roma Termini": "ROM",
+        "Napoli Centrale": "NAP",
+        "Torino Porta Nuova": "TOR",
+        "Firenze S.M.Novella": "FIR",
+        "Bologna Centrale": "BOL",
+        "Agropoli": "AGR",
+        "Bari Centrale": "BAR",
+        "Barletta": "BRL",
+        "Benevento": "BNV",
+        "Bergamo": "BRG",
+        "Bisceglie": "BSC",
+        "Bolzano": "BZN",
+        "Brescia": "BRS",
+        "Caserta": "CAS",
+        "Conegliano": "CON",
+        "Desenzano": "DES",
+        "Ferrara": "FER",
+        "Foggia": "FOG",
+        "Genova Brignole": "GBR",
+        "Genova Piazza Principe": "GPP",
+        "Lamezia Terme C": "LTC",
+        "Latisana-Lignano-Bib": "LTB",
+        "Maratea": "MRT",
+        "Milano Rho Fiera": "MRF",
+        "Milano Rogoredo": "MLR",
+        "Molfetta": "MLF",
+        "Monfalcone": "MNF",
+        "Napoli Afragola": "NPA",
+        "Padova": "PDV",
+        "Paola": "PAO",
+        "Peschiera": "PES",
+        "Pordenone": "PRN",
+        "Portogruaro-Caorle": "PGC",
+        "Reggio Calabria": "RGC",
+        "Reggio Emilia AV": "REA",
+        "Roma Tiburtina": "RMT",
+        "Rosarno": "ROS",
+        "Rovereto": "RVR",
+        "Rovigo": "RVG",
+        "Salerno": "SLR",
+        "Sapri": "SPR",
+        "Scalea": "SCL",
+        "Torino Porta Susa": "TPS",
+        "Trani": "TRA",
+        "Trento": "TRN",
+        "Treviso Centrale": "TRV",
+        "Trieste Centrale": "TRI",
+        "Udine": "UDI",
+        "Vallo d. Lucania": "VDL",
+        "Venezia Mestre": "VZM",
+        "Venezia S.Lucia": "VSL",
+        "Verona Porta Nuova": "VPN",
+        "Vibo-Pizzo": "VBP",
+        "Vicenza": "VIC",
+        "Villa S.Giovanni": "VSG",
     }
 
     # Shorten departure station and arrival station for output
     departure_station_new = stations[departure_station]
     arrival_station_new = stations[arrival_station]
-    # Choose random price between 50 and 100 since retrieving real price would have resulted in chainlink timeout due to slow loading response time of website
+    # Choose random price between 50 and 100 since retrieving real price would have resulted in chainlink timeout due
+    # to slow loading response time of website
     price = np.random.randint(50, 100)
-    
+
     # fill ticket with information
     ticket = f"{departure_station_new}_{unix_arrival}_{arrival_station_new}_{train_number}_{price}"
 
@@ -261,8 +261,8 @@ async def search_ticket(
     summary="Fake Ticket Search",
     description="Main method to simulate response from calling the searchTicket function."
 )
-
-# Simulation of search_ticket where every piece of ticket information can be chosenn by user and is returned in correct format 
+# Simulation of search_ticket where every piece of ticket information can be chosenn by user and is returned in
+# correct format
 async def fake_ticket_search(
         request: Request,
 
@@ -292,7 +292,6 @@ async def fake_ticket_search(
             description="Price of one ticket (e.g. 59.90)."
         )
 ):
-    
     # Converting time of departure and time of arrival of connection to unix format
     today = datetime.date.today()
     day_dep = today.day + 1
@@ -303,7 +302,7 @@ async def fake_ticket_search(
     datetime_arr = datetime.datetime(today.year, today.month, day_arr, int(time_of_arrival.split(":")[0]),
                                      int(time_of_arrival.split(":")[1]))
     unix_arrival = round(time.mktime(datetime_arr.timetuple()))
-    
+
     price_rounded = int(float(price[:-2]))
 
     departure_station_new = departure_station[:2]
@@ -320,7 +319,6 @@ async def fake_ticket_search(
     summary="Check Delay",
     description="Main method to check if a train had a delay of more than 60 minutes."
 )
-
 # Checking if train is delayed by train number through webscraping
 async def check_delay(
         request: Request,
@@ -340,7 +338,7 @@ async def check_delay(
     driver.get(base_URL + '/' + str(train_number))
 
     # Check if train is currently running and delayed
-    delay_thresh = 30 # threshhold for which function checks if delayed
+    delay_thresh = 30  # threshhold for which function checks if delayed
     try:
         delay = driver.find_element_by_xpath(
             '/html/body/div[2]/section/div/div/div[1]/div/div/div[3]/span[2]').get_attribute("innerText")
@@ -358,7 +356,6 @@ async def check_delay(
     summary="Fake Delay",
     description="Main method to simulate response from calling the checkDelay function."
 )
-
 # Simulation of check_delay function where user can input train number and length of delay
 async def fake_delay(
         request: Request,
