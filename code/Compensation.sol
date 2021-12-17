@@ -294,5 +294,4 @@ contract ItaloSellAndRefundService is ChainlinkClient {
         msg.sender.transfer(amount);
         return true;
     }
-
 }
