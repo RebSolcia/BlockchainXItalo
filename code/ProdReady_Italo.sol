@@ -151,10 +151,10 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
     function buyTicket(bytes32 _requestId) public payable {
 
         // Instantiate the actual price from string to uint to allow comparison with the msg.value
-        uint actual_price = Converter.StringToUint(RequestToPrice[_requestId][4])*10000000000000000;
+        uint actual_price = Converter.StringToUint(RequestToPrice[_requestId][4]);
 
         // Make sure that the msg.value is greater than the ETH price
-        require(msg.value >= actual_price, "You have paid too little! Try again.");
+        require((msg.value)*10 >= actual_price, "You have paid too little! Try again.");
 
         // Instantiate all of the variables that are needed to populate the ticket struct
         // by using the values that have been previously stored inside the RequestToPrice array
@@ -164,7 +164,7 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
         uint _datetimeArrivalPredicted = Converter.StringToUint(RequestToPrice[_requestId][1]);
         string memory _stationArrival = RequestToPrice[_requestId][2];
         uint _trainNumber = Converter.StringToUint(RequestToPrice[_requestId][3]);
-        uint _price = Converter.StringToUint(RequestToPrice[_requestId][4])*10000000000000000;
+        uint _price = Converter.StringToUint(RequestToPrice[_requestId][4]);
         
         // Emit an event telling the user in which case he's supposed to ask for a refund 
         emit TicketInfo(string(abi.encodePacked("You have successfully bought your ticket from ", _stationDeparture, " to ", _stationArrival, ". The train ", RequestToPrice[_requestId][3] ," is scheduled to arrive at ", RequestToPrice[_requestId][1], ". Make sure to ask for a refund in case of delay! Thanks for choosing our service")));
@@ -242,9 +242,9 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
                     // Get the owner of the ticket indexed by i
                     address payable owner_to_be_repaid = this_ticket.owner;
                     // Calculate the amount of be repaid as a percentage of the price of the ticket indexed by i
-                    uint amount_to_be_repaid = ((this_ticket.price * 30) / 100) - ((this_ticket.price * 30) % 100);
+                    uint amount_to_be_repaid = ((this_ticket.price * 30) / 100);
                     // Transfer such amount to the owner of the ticket
-                    owner_to_be_repaid.transfer(amount_to_be_repaid);
+                    owner_to_be_repaid.transfer(amount_to_be_repaid*1000000000000000);
                     // Decrease the price of the ticket by the amount that has been already refunded
                     TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i].price -= amount_to_be_repaid;
                 }
@@ -254,8 +254,8 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
                 for (uint i=0; i < length_ticketlist; i++){
                     Ticket memory this_ticket = TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i];
                     address payable owner_to_be_repaid = this_ticket.owner;
-                    uint amount_to_be_repaid = ((this_ticket.price * 60) / 100) - ((this_ticket.price * 60) % 100);
-                    owner_to_be_repaid.transfer(amount_to_be_repaid);
+                    uint amount_to_be_repaid = ((this_ticket.price * 60) / 100);
+                    owner_to_be_repaid.transfer(amount_to_be_repaid*1000000000000000);
                     TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i].price -= amount_to_be_repaid;
                 }
                 CompensationAsked[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][60] = "True";
@@ -264,8 +264,8 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
                 for (uint i=0; i < length_ticketlist; i++){
                     Ticket memory this_ticket = TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i];
                     address payable owner_to_be_repaid = this_ticket.owner;
-                    uint amount_to_be_repaid = ((this_ticket.price * 90) / 100) - ((this_ticket.price * 90) % 100);
-                    owner_to_be_repaid.transfer(amount_to_be_repaid);
+                    uint amount_to_be_repaid = ((this_ticket.price * 90) / 100);
+                    owner_to_be_repaid.transfer(amount_to_be_repaid*1000000000000000);
                     TicketsByTrainNumberByDatetime[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][i].price -= amount_to_be_repaid;
                 }
                 CompensationAsked[_trainNumber_Delay][_datetimeArrivalPredicted_Delay][90] = "True";
