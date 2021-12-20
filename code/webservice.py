@@ -19,6 +19,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 
+from web3 import Web3
+
 # IMPORTANT: Change the following path to local chromedriver instance
 exe_path = os.path.join(os.getcwd(), "chromedriver.exe")
 ser = Service(exe_path)
@@ -82,6 +84,20 @@ async def validation_exception_handler(
     logger.error("FastAPI Validation Error")
 
     return await request_validation_exception_handler(request, exc)
+
+
+# Function to retrieve the USD price of ETH
+def getETHprice(ticket_price):
+    web3 = Web3(Web3.HTTPProvider('https://kovan.infura.io/v3/abde9f2d44754a6f80435bff911eb484'))
+    abi = '[{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"description","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint80","name":"_roundId","type":"uint80"}],"name":"getRoundData","outputs":[{"internalType":"uint80","name":"roundId","type":"uint80"},{"internalType":"int256","name":"answer","type":"int256"},{"internalType":"uint256","name":"startedAt","type":"uint256"},{"internalType":"uint256","name":"updatedAt","type":"uint256"},{"internalType":"uint80","name":"answeredInRound","type":"uint80"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"latestRoundData","outputs":[{"internalType":"uint80","name":"roundId","type":"uint80"},{"internalType":"int256","name":"answer","type":"int256"},{"internalType":"uint256","name":"startedAt","type":"uint256"},{"internalType":"uint256","name":"updatedAt","type":"uint256"},{"internalType":"uint80","name":"answeredInRound","type":"uint80"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"version","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]'
+    addr = '0x9326BFA02ADD2366b30bacB125260Af641031331'
+    contract = web3.eth.contract(address=addr, abi=abi)
+    latestData = contract.functions.latestRoundData().call()
+    ETH_price_in_USD = latestData[1] / 100000000
+    ticket_price_in_ETH = (1 / ETH_price_in_USD) * ticket_price
+    ticket_price_in_FINNEY = ticket_price_in_ETH * 1000
+    ticket_price_in_FINNEY_rounded = int(ticket_price_in_FINNEY)
+    return ticket_price_in_FINNEY_rounded
 
 
 # Main GET functions
@@ -249,8 +265,12 @@ async def search_ticket(
     # to slow loading response time of website
     price = np.random.randint(50, 100)
 
+    price_rounded_finney = int(getETHprice(price))
+
     # fill ticket with information
-    ticket = f"{departure_station_new}_{unix_arrival}_{arrival_station_new}_{train_number}_{price}"
+    ticket = f"{departure_station_new}_{unix_arrival}_{arrival_station_new}_{train_number}_{price_rounded_finney}"
+
+    driver.quit()
 
     return {"response": ticket}
 
@@ -304,11 +324,12 @@ async def fake_ticket_search(
     unix_arrival = round(time.mktime(datetime_arr.timetuple()))
 
     price_rounded = int(float(price[:-2]))
+    price_rounded_finney = int(getETHprice(price_rounded))
 
     departure_station_new = departure_station[:2]
     arrival_station_new = arrival_station[:2]
 
-    ticket = f"{departure_station_new}_{unix_arrival}_{arrival_station_new}_{train_number}_{price_rounded}"
+    ticket = f"{departure_station_new}_{unix_arrival}_{arrival_station_new}_{train_number}_{price_rounded_finney}"
 
     return {"response": ticket}
 
