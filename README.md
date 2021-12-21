@@ -80,4 +80,4 @@ The most important functions inside of this contract are (in logical order):
 ### 2.3 The ProdReady_Italo smart contract
 It is actually the same as the Compensation smart contract, but it is the production version of the latter. The oracles in this case are calling our webservices with the two functions that are actually scraping the true Italo's website.
 
-(See the [Compensation contract](https://github.com/RebSolcia/BlockchainXItalo/blob/main/code/ProdReady_Italo.sol))
+(See the [ProdReady_Italo contract](https://github.com/RebSolcia/BlockchainXItalo/blob/main/code/ProdReady_Italo.sol))
