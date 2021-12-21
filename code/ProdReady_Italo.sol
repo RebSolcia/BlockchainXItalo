@@ -97,10 +97,10 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
 
         // Set the url to perform the GET request so that the request is built adaptively, 
         // given the parameters that are fed to the requestInfo function
-        string memory query = string(abi.encodePacked("http://3ecb-82-54-155-54.ngrok.io", //"https://455b-2001-b07-a3c-400a-b561-bc22-61b9-a720.ngrok.io", 
-                                                      "/request_info/?", 
-                                                      "departure_station=", _stationDeparture, 
-                                                      "&arrival_station=", _stationArrival, 
+        string memory query = string(abi.encodePacked("https://ef27-188-218-191-149.ngrok.io", //"https://455b-2001-b07-a3c-400a-b561-bc22-61b9-a720.ngrok.io",
+                                                      "/request_info/?",
+                                                      "departure_station=", _stationDeparture,
+                                                      "&arrival_station=", _stationArrival,
                                                       "&departure_hour=", _departureHour));
         request.add("get", query);
 
@@ -111,12 +111,12 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
         // first create a claim for a ticket and then buy it
         counter += 1;
         string memory counter_str = Converter.UintToString(counter);
-        emit TicketInfo(string(abi.encodePacked("Your ticket has been successfully stored inside our database! To buy it, please insert the following request ID inside the GetKeccak function:", counter_str, ". After having retrieved the Keccak-encoded counter, go inside of the public mapping RequestToId and query the price of your ticket by inputting it these two parameters: the Keccak-encoded counter and the number 4.")));
+        emit TicketInfo(string(abi.encodePacked("Your ticket has been successfully stored inside our database! To buy it, please insert the following request ID inside the GetKeccak function:", counter_str, ". After having retrieved the Keccak-encoded counter, go inside of the public mapping RequestToId and query the price of your ticket by inputting it these two parameters: the Keccak-encoded counter and the number 4. Once you have retrieved the price, please make sure to insert that specific number in FINNEY as the msg.value when buying a ticket.")));
 
         // Send the request
         return sendChainlinkRequestTo(Oracle, request, fee);
     }
-    
+
     // fulfill: function that actually fulfills the request forwarded by the requestInfo function.
     // You do not have to interact with it! These inputs are going to be fed by the requestInfo function itself.
     function fulfill(bytes32 _requestId, bytes32 _response) public recordChainlinkFulfillment(_requestId) {
@@ -129,10 +129,10 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
         // Store the response_string inside a variable, after having transformed the bytes32 response into a string
         string memory response_string_info = Converter.bytes32ToString(_response);
 
-        // Split the string response_string based on underscores, so that you can index the response inside 
+        // Split the string response_string based on underscores, so that you can index the response inside
         // the RequestToPrice mapping
         string[] memory response_list_info = Converter.split(response_string_info, "_");
-        
+
         // Store, under the given counter_key (which is the keccak-encoded version of the counter),
         // the response string you get from the call
         RequestToPrice[counter_key] = response_list_info;
@@ -145,7 +145,7 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
     }
 
     // buyTicket: uses the keccak-encoded version of the counter to retrieve a certain ticket for a user and let her
-    // pay for it and buy it. The msg.value when calling the buyTicket function must be greater or equal than the 
+    // pay for it and buy it. The msg.value when calling the buyTicket function must be greater or equal than the
     // price that you have retrieved previously by querying the RequestToPrice mapping, otherwise the transaction
     // gets reverted.
     function buyTicket(bytes32 _requestId) public payable {
@@ -165,8 +165,8 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
         string memory _stationArrival = RequestToPrice[_requestId][2];
         uint _trainNumber = Converter.StringToUint(RequestToPrice[_requestId][3]);
         uint _price = Converter.StringToUint(RequestToPrice[_requestId][4]);
-        
-        // Emit an event telling the user in which case he's supposed to ask for a refund 
+
+        // Emit an event telling the user in which case he's supposed to ask for a refund
         emit TicketInfo(string(abi.encodePacked("You have successfully bought your ticket from ", _stationDeparture, " to ", _stationArrival, ". The train ", RequestToPrice[_requestId][3] ," is scheduled to arrive at ", RequestToPrice[_requestId][1], ". Make sure to ask for a refund in case of delay! Thanks for choosing our service")));
 
         // Push the Ticket inside the Ticket array, given train number and given the datetime
@@ -187,7 +187,7 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
     // checkDelay: is meant to query the Italo's website given a certain train number to see whether it has delayed
     // with respect to its predicted datetime of arrival
     function checkDelay(string memory _trainNumber, string memory _expectedArr) public returns (bytes32 requestId) {
-        
+
         // Check first whether the train has delayed of at least 20 mintues, otherwise it does not make
         // sense to go through all of the array iteration.
         uint _datetimeArrivalPredicted_Bytes = Converter.StringToUint(_expectedArr);
@@ -196,9 +196,9 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
         // A request variable is created, following the fulfill_delay function below
         Chainlink.Request memory request = buildChainlinkRequest(jobId, address(this), this.fulfill_delay.selector);
 
-        // Set the url to perform the GET request so that the request is built adaptively, 
+        // Set the url to perform the GET request so that the request is built adaptively,
         // given the parameters that are fed to the requestInfo function
-        string memory query = string(abi.encodePacked("http://3ecb-82-54-155-54.ngrok.io", //"https://455b-2001-b07-a3c-400a-b561-bc22-61b9-a720.ngrok.io", 
+        string memory query = string(abi.encodePacked("https://ef27-188-218-191-149.ngrok.io", //"https://455b-2001-b07-a3c-400a-b561-bc22-61b9-a720.ngrok.io",
                                                       "/check_delay/?", 
                                                       "train_number=", _trainNumber,
                                                       "&expected_arr=", _expectedArr));

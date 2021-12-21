@@ -115,7 +115,7 @@ contract ItaloSellAndRefundService is ChainlinkClient {
         // first create a claim for a ticket and then buy it
         counter += 1;
         string memory counter_str = Converter.UintToString(counter);
-        emit TicketInfo(string(abi.encodePacked("Your ticket has been successfully stored inside our database! To buy it, please insert the following request ID inside the CounterToKeccak function:", counter_str, ". After having retrieved the Keccak-encoded counter, go inside of the public mapping RequestToId and query the price of your ticket by inputting it these two parameters: the Keccak-encoded counter and the number 4.")));
+        emit TicketInfo(string(abi.encodePacked("Your ticket has been successfully stored inside our database! To buy it, please insert the following request ID inside the GetKeccak function:", counter_str, ". After having retrieved the Keccak-encoded counter, go inside of the public mapping RequestToId and query the price of your ticket by inputting it these two parameters: the Keccak-encoded counter and the number 4. Once you have retrieved the price, please make sure to insert that specific number in FINNEY as the msg.value when buying a ticket.")));
 
         // Send the request
         return sendChainlinkRequestTo(Oracle, request, fee);
