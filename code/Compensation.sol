@@ -3,18 +3,18 @@ pragma solidity ^0.5.0;
 // Make sure to use the KOVAN TESTNET
 
 import "https://github.com/smartcontractkit/chainlink/blob/develop/contracts/src/v0.5/ChainlinkClient.sol";
-import "LibraryUtils.sol";
+import "github/RebSolcia/BlockchainXItalo/code/LibraryUtils.sol";
 
-// The contract ItaloSellAndRefundService inherits from ChainLinkClient.sol and 
+// The contract ItaloSellAndRefundService inherits from ChainLinkClient.sol and
 // uses the LibraryUtils library to make the conversions
 contract ItaloSellAndRefundService is ChainlinkClient {
-    
+
     //
     // CONSTRUCTOR
     //
-    
+
     // A constructor is created in order to initialize the oracle address, the JobId (which is a Get>Bytes32),
-    // the fee and the counter. They are all needed to make API calls. 
+    // the fee and the counter. They are all needed to make API calls.
     constructor() public {
         setPublicChainlinkToken();
         owner = msg.sender;
@@ -22,7 +22,7 @@ contract ItaloSellAndRefundService is ChainlinkClient {
         jobId = "7401f318127148a894c00c292e486ffd";
         fee = 0.1 * 10 ** 18; // 0.1 LINK
     }
-    
+
     //
     // MODIFIERS
     //
@@ -32,7 +32,7 @@ contract ItaloSellAndRefundService is ChainlinkClient {
         require(msg.sender == owner);
         _;
     }
-    
+
     //
     // STATE VARIABLES OF THE CONTRACT
     //
@@ -42,11 +42,11 @@ contract ItaloSellAndRefundService is ChainlinkClient {
     address public owner;
     address public Oracle;
     bytes32 public jobId;
-    uint256 public fee; 
+    uint256 public fee;
     bytes32 public bytesdirisposta;
     string public response_string;
     uint public counter = 0;
-    
+
     //
     // STRUCTS
     //
@@ -60,7 +60,7 @@ contract ItaloSellAndRefundService is ChainlinkClient {
         string station_departure;
         string station_arrival;
     }
-    
+
     //
     // MAPPINGS
     //
@@ -70,7 +70,7 @@ contract ItaloSellAndRefundService is ChainlinkClient {
     mapping(bytes32 => string[]) public RequestToPrice;
 
     // TicketsByTrainNumberByDatetime is used for debugging purposes, to see whether the tickets are stored
-    // given the train number and given the predicted datetime of arrival 
+    // given the train number and given the predicted datetime of arrival
     mapping(uint => mapping(uint => Ticket[])) public TicketsByTrainNumberByDatetime;
 
     // DelayAsked ensures that the compensation has not been asked for a certain train at a certain threshold of delay
@@ -98,7 +98,7 @@ contract ItaloSellAndRefundService is ChainlinkClient {
 
         // Set the url to perform the GET request so that the request is built adaptively,
         // given the parameters that are fed to the requestInfo function
-        string memory query = string(abi.encodePacked("https://5b3e-93-36-179-135.ngrok.io",
+        string memory query = string(abi.encodePacked("https://5701-188-218-191-149.ngrok.io",
                                                       "/fake_ticket_search/?",
                                                       "departure_station=", _stationDeparture,
                                                       "&arrival_station=", _stationArrival,
@@ -158,7 +158,7 @@ contract ItaloSellAndRefundService is ChainlinkClient {
         uint actual_price = Converter.StringToUint(RequestToPrice[_requestId][4]);
 
         // Make sure that the msg.value is greater than the ETH price
-        require((msg.value)*10 >= actual_price, "You have paid too little! Try again.");
+        require(msg.value >= (actual_price*1000000000000000), "You have paid too little! Try again.");
 
         // Instantiate all of the variables that are needed to populate the ticket struct
         // by using the values that have been previously stored inside the RequestToPrice array
@@ -198,7 +198,7 @@ contract ItaloSellAndRefundService is ChainlinkClient {
 
         // Set the url to perform the GET request so that the request is built adaptively,
         // given the parameters that are fed to the requestInfo function
-        string memory query = string(abi.encodePacked("https://5b3e-93-36-179-135.ngrok.io",
+        string memory query = string(abi.encodePacked("https://5701-188-218-191-149.ngrok.io",
                                                       "/fake_delay/?",
                                                       "train_number=", _trainNumber,
                                                       "&expected_arr=", _expectedArr,

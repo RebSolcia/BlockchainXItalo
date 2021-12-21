@@ -154,7 +154,7 @@ contract ItaloSellAndRefundService_Prod is ChainlinkClient {
         uint actual_price = Converter.StringToUint(RequestToPrice[_requestId][4]);
 
         // Make sure that the msg.value is greater than the ETH price
-        require((msg.value)*10 >= actual_price, "You have paid too little! Try again.");
+        require(msg.value >= (actual_price*1000000000000000), "You have paid too little! Try again.");
 
         // Instantiate all of the variables that are needed to populate the ticket struct
         // by using the values that have been previously stored inside the RequestToPrice array
