@@ -84,4 +84,4 @@ It is actually the same as the Compensation smart contract, but it is the produc
 
 # 3. How To: Video-Tutorial for DEV 
 Follow the link and see how to have your Italo contract running with a few clicks!
-(See the [video tutorial](LINKHERE) on YouTube here.)
+(See the [video tutorial](https://youtu.be/GX232I2fBfs) on YouTube here.)
